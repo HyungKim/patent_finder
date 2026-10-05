@@ -52,21 +52,52 @@ uv pip compile requirements/tokenizers.in --no-deps --python-version 3.11 --pyth
 
 ## 3. 운영 PC에서 할 일 (인터넷 없음)
 
-Windows PowerShell 기준이다.
+Windows PowerShell 기준이다. 모든 명령은 프로그램 폴더에서 실행한다. 아래는 폴더를 `D:\patent_finder` 에 둔 예다.
+
+### 3.1 설치 위치
+
+프로그램 폴더는 어느 드라이브에 두어도 된다. 설치 패키지(`.venv`), 모델, DB, 결과물이 모두 이 폴더 아래에 생기고, PC에 이미 설치된 Python은 실행 파일로만 쓴다. Python이 C 드라이브에 있어도 폴더를 D 드라이브에 두면 C 드라이브는 거의 쓰지 않는다. Windows에 따로 등록하는 것이 없으므로 지울 때는 폴더만 지우면 된다.
+
+- 가상환경(`.venv`)은 폴더를 최종 위치에 둔 뒤에 만든다. 만든 뒤에 폴더를 옮기거나 이름을 바꾸면 `.venv` 를 지우고 다시 만든다.
+- 경로는 짧은 영문으로 한다.
+- 준비 환경의 `.venv`, `data`, `artifacts`, `outputs` 는 가져오지 않는다. `.venv` 는 OS가 달라 쓸 수 없고, 나머지는 준비 환경에서 실행한 흔적이다.
+- 필요한 공간: 모델 약 490 MB, 반입 wheel 약 104 MB(설치 뒤에는 지워도 된다), 설치된 패키지 수백 MB(Windows에서는 측정하지 않았다. macOS에서는 약 300 MB), 그리고 쓰면서 쌓이는 DB·임베딩·결과물.
+
+### 3.2 Python 확인
+
+```powershell
+py -0p
+```
+
+목록에 3.11이 있고 `-32` 가 붙어 있지 않아야 한다(64비트). `requirements.lock` 과 `vendor/wheels` 는 Python 3.11 · 64비트용이다. 다른 버전이면 2절의 방법으로 lock과 wheel을 그 버전에 맞춰 다시 만든다. 지금 lock에 적힌 버전들은 Python 3.12·3.13용 Windows wheel도 PyPI에 있지만(2026-10-05에 메타데이터로 확인) 그 버전에서는 시험하지 않았다. Python 3.10 이하는 지원하지 않는다.
+
+### 3.3 설치와 점검
+
+```powershell
+cd D:\patent_finder
+```
 
 ```powershell
 py -3.11 -m venv .venv
 ```
 
+`py` 가 없으면 `python.exe` 의 전체 경로로 실행한다. 예: `& "C:\Python311\python.exe" -m venv .venv`
+
 ```powershell
-.venv\Scripts\python -m pip install --no-index --find-links .\vendor\wheels --require-hashes --no-deps -r requirements.lock
+.venv\Scripts\python -m pip install --no-index --find-links .\vendor\wheels --require-hashes --no-deps --no-cache-dir -r requirements.lock
+```
+
+`--no-cache-dir` 는 pip이 사용자 폴더(보통 C 드라이브)에 캐시를 만들지 않게 한다. C 드라이브에 공간이 거의 없어 설치 중 임시 파일까지 다른 드라이브에 두려면, 위 명령보다 먼저 아래를 실행한다. 설치가 끝나면 `.tmp` 폴더는 지워도 된다.
+
+```powershell
+mkdir .tmp; $env:TEMP = "$PWD\.tmp"; $env:TMP = $env:TEMP
 ```
 
 ```powershell
 $env:PYTHONPATH = "src"
 ```
 
-패키지로 설치하지 않고 `PYTHONPATH=src` 로 실행한다. 설치가 필요하면 `pip install --no-index --no-deps --no-build-isolation -e .` 를 쓴다(venv에 setuptools가 있어야 한다).
+패키지로 설치하지 않고 `PYTHONPATH=src` 로 실행한다. 이 설정은 PowerShell 창을 닫으면 사라지므로, 창을 새로 열 때마다 프로그램 폴더로 이동한 뒤 다시 실행한다. `pip install -e .` 는 쓰지 않는다. 인터넷이 없으면 빌드 도구를 받지 못해 실패할 수 있다.
 
 ```powershell
 .venv\Scripts\python -m patent_marker.cli doctor --offline
@@ -93,6 +124,18 @@ pytest와 reportlab을 함께 반입한 경우:
 ```
 
 모델이 없으면 실제 모델 시험 6개는 사유와 함께 건너뛴다.
+
+pytest를 반입하지 않았으면 합성 보고자료를 분석해 정답표와 대조하는 것으로 확인한다:
+
+```powershell
+.venv\Scripts\python -m patent_marker.cli analyze --input tests\fixtures\divisions --output outputs\divisions-001
+```
+
+```powershell
+.venv\Scripts\python tools\check_expected.py --results outputs\divisions-001\results.jsonl
+```
+
+macOS 개발 환경에서의 수치는 `README.md` 의 검수 결과에 있다. OS가 다르면 점수의 끝자리가 달라 경계에 있는 구간 몇 개는 판정이 바뀔 수 있다. 수치가 크게 다르면 설치와 모델 파일을 다시 확인한다.
 
 ## 6. 데이터 위치와 백업
 
