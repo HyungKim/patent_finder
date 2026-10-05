@@ -1,0 +1,127 @@
+# GitHub의 Windows 러너에서 시험을 돌린다. 합성 시험 자료만 쓴다.
+#
+# - tests: 저장소의 코드를 requirements.lock 그대로 설치해 pytest를 실행한다.
+#   모델 파일이 없으므로 실제 모델 시험 6개는 건너뛴다.
+# - release-bundle: 릴리스에 첨부한 설치 묶음을 받아 docs/OFFLINE_INSTALL.md 3절의 절차대로
+#   설치·점검·분석하고, 묶음 안의 시험 전체(실제 모델 포함)를 실행한다. 수동 실행에서만 돈다.
+#
+# 러너는 영문 Windows Server다. 한국어 Windows 10/11과는 시스템 로캘이 다르다.
+name: Windows 시험
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 설치 묶음을 받을 릴리스 태그
+        default: v0.1.0
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: 저장소 시험 (Windows · Python 3.11)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          architecture: x64
+      - name: 환경 확인
+        run: |
+          python -VV
+          [System.Environment]::OSVersion.VersionString
+          "culture=$((Get-Culture).Name) ansi_codepage=$([System.Text.Encoding]::Default.CodePage)"
+      - name: 운영 패키지 설치 (requirements.lock, 해시 검증)
+        run: python -m pip install --disable-pip-version-check --require-hashes --no-deps -r requirements.lock
+      - name: 시험용 패키지 설치
+        run: python -m pip install --disable-pip-version-check -r requirements/dev.in
+      - name: pytest
+        run: python -m pytest -ra
+
+  release-bundle:
+    name: 릴리스 묶음 설치 (문서 절차 그대로)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          architecture: x64
+      - name: 환경 확인
+        run: |
+          python -VV
+          [System.Environment]::OSVersion.VersionString
+          "culture=$((Get-Culture).Name) ansi_codepage=$([System.Text.Encoding]::Default.CodePage)"
+          Get-PSDrive -PSProvider FileSystem | Format-Table Name, @{n='FreeGB';e={[math]::Round($_.Free / 1GB, 1)}}
+      - name: 묶음 내려받기와 해시 확인
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP 'bundle'
+          gh release download $env:TAG --repo $env:GITHUB_REPOSITORY --pattern 'patent_finder-*-windows-x64-py311.zip' --dir $dir
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $zip = Get-ChildItem (Join-Path $dir '*.zip') | Select-Object -First 1
+          $release = gh release view $env:TAG --repo $env:GITHUB_REPOSITORY --json assets | ConvertFrom-Json
+          $expected = ($release.assets | Where-Object { $_.name -eq $zip.Name }).digest
+          $actual = 'sha256:' + (Get-FileHash -LiteralPath $zip.FullName -Algorithm SHA256).Hash.ToLower()
+          "file=$($zip.Name) size=$($zip.Length)"
+          "expected=$expected"
+          "actual=$actual"
+          if ($expected -ne $actual) { throw '내려받은 파일의 해시가 릴리스에 기록된 값과 다르다' }
+      - name: 압축 풀기 (D 드라이브가 있으면 D:\patent_finder)
+        run: |
+          $zip = Get-ChildItem (Join-Path $env:RUNNER_TEMP 'bundle\*.zip') | Select-Object -First 1
+          $root = if (Test-Path 'D:\') { 'D:\' } else { Join-Path $env:RUNNER_TEMP 'install' }
+          Expand-Archive -LiteralPath $zip.FullName -DestinationPath $root
+          $pf = Join-Path $root 'patent_finder'
+          "설치 폴더: $pf"
+          Get-ChildItem -Force $pf | Select-Object -ExpandProperty Name
+          $names = Get-ChildItem (Join-Path $pf 'tests\fixtures\divisions') | Select-Object -ExpandProperty Name
+          $names
+          if (-not (Test-Path -LiteralPath (Join-Path $pf 'tests\fixtures\divisions\광학솔루션사업부_기술보고_합성.pptx'))) { throw '한글 파일명이 깨졌다' }
+          "PF_DIR=$pf" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Python 목록 (py -0p)
+        continue-on-error: true
+        run: py -0p
+      - name: 가상환경 만들기
+        working-directory: ${{ env.PF_DIR }}
+        run: python -m venv .venv
+      - name: 설치 (묶음의 wheel만 사용, 인터넷 없이)
+        working-directory: ${{ env.PF_DIR }}
+        run: .venv\Scripts\python -m pip install --no-index --find-links .\vendor\wheels --require-hashes --no-deps --no-cache-dir -r requirements.lock
+      - name: 점검 (doctor --offline)
+        working-directory: ${{ env.PF_DIR }}
+        env:
+          PYTHONPATH: src
+        run: .venv\Scripts\python -m patent_marker.cli doctor --offline
+      - name: 사업부별 합성 보고자료 분석
+        working-directory: ${{ env.PF_DIR }}
+        env:
+          PYTHONPATH: src
+        run: .venv\Scripts\python -m patent_marker.cli analyze --input tests\fixtures\divisions --output outputs\divisions-001
+      - name: 정답표 대조
+        working-directory: ${{ env.PF_DIR }}
+        run: .venv\Scripts\python tools\check_expected.py --results outputs\divisions-001\results.jsonl
+      - name: 형식별 작은 자료 분석 (PPTX, PDF, DOCX, TXT, MD)
+        working-directory: ${{ env.PF_DIR }}
+        env:
+          PYTHONPATH: src
+        run: .venv\Scripts\python -m patent_marker.cli analyze --input tests\fixtures\synthetic --output outputs\demo-001
+      - name: 결과물 목록
+        working-directory: ${{ env.PF_DIR }}
+        run: Get-ChildItem -Recurse outputs | Select-Object FullName, Length | Format-Table -AutoSize
+      - name: 시험용 패키지 설치 (인터넷 사용)
+        working-directory: ${{ env.PF_DIR }}
+        run: .venv\Scripts\python -m pip install --disable-pip-version-check --no-cache-dir -r requirements\dev.in
+      - name: 묶음 안의 시험 전체 (실제 모델 포함)
+        working-directory: ${{ env.PF_DIR }}
+        run: .venv\Scripts\python -m pytest -ra
