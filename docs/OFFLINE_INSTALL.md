@@ -119,6 +119,25 @@ $env:PYTHONPATH = "src"
 
 onnxruntime은 Windows에서 Visual C++ 재배포 패키지가 필요하다. `import onnxruntime` 이 DLL 오류로 실패하면 그 패키지의 반입 여부를 확인한다.
 
+### 3.4 새 버전으로 바꿀 때
+
+기존 폴더에 덮어쓰지 않고, 새 폴더에 설치한 뒤 기록만 옮긴다. 예전 버전의 파일이 섞여 남지 않고, 새 버전이 잘 도는 것을 본 뒤에 예전 것을 지울 수 있다.
+
+1. 실행 중인 검은 창(`run.bat`, `mark.bat`)을 모두 닫고, 기존 `D:\patent_finder` 폴더의 이름을 `patent_finder_old` 로 바꾼다.
+2. 새 설치 묶음(zip)을 풀어 `patent_finder` 폴더를 `D:\` 에 둔다.
+3. 지금까지의 판정 기록과 결과를 이어 쓰려면 `patent_finder_old` 안의 `data`, `artifacts`, `outputs` 세 폴더를 새 `D:\patent_finder` 안으로 옮긴다. 처음부터 새로 시작하려면 옮기지 않는다.
+4. 새 폴더의 `setup.bat` 을 더블클릭한다.
+5. `mark.bat` 으로 한 번 분석해 보고, 잘 되면 `patent_finder_old` 폴더를 지운다.
+
+세 폴더에 들어 있는 것: `data` 는 문서 기록·판정·임베딩 캐시, `artifacts` 는 학습한 분류기와 평가 보고서, `outputs` 는 분석 결과물이다. 나머지(`src`, `vendor`, `models`, `.venv` 등)는 프로그램이라 새 묶음의 것을 쓴다. `config\default.yaml` 을 직접 고쳐 썼다면 같은 내용을 새 폴더의 파일에 다시 적는다.
+
+### 3.5 지울 때
+
+`D:\patent_finder` 폴더를 지우면 끝이다. Windows에 따로 등록하는 것이 없어서 시작 메뉴, 레지스트리, 사용자 폴더에 남는 것이 없고, PC의 Python도 그대로다.
+
+- 지우기 전에 검은 창을 모두 닫고, 결과 폴더의 PPTX·PDF를 열어 둔 PowerPoint 같은 프로그램도 닫는다. 열려 있으면 Windows가 사용 중이라며 지우지 못한다.
+- 폴더를 지우면 판정 기록(`data`), 학습한 분류기(`artifacts`), 분석 결과(`outputs`)도 함께 사라진다. 남기려면 이 세 폴더를 먼저 다른 곳에 복사해 둔다.
+
 ## 4. 네트워크 차단 확인
 
 1. `config/default.yaml` 의 `runtime.offline` 이 `true` 인지 확인한다. 이 값이 true이면 프로그램이 루프백 외 접속과 DNS 조회를 스스로 차단하고, 시도가 있으면 오류로 멈춘다.

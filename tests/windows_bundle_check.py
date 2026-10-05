@@ -5,6 +5,7 @@ GitHub의 Windows 러너에서 묶음을 푼 폴더 안에서 실행한다(.gith
 
     python tests\\windows_bundle_check.py --expect 3.12
     python tests\\windows_bundle_check.py --expect 3.12 --moved     (폴더를 다른 곳으로 옮긴 뒤)
+    python tests\\windows_bundle_check.py --expect 3.12 --upgraded  (새 폴더에 설치하고 예전 기록을 옮긴 뒤)
 
 하는 일
     1) setup.bat      더블클릭했을 때처럼 실행. 다시 실행해도 되는지도 본다
@@ -20,6 +21,7 @@ import argparse
 import json
 import os
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -58,6 +60,18 @@ def drop(batch: str, paths: list[Path]) -> str:
     """탐색기가 파일을 batch 파일 위에 끌어다 놓을 때 만드는 명령줄. 공백이 든 경로만 따옴표로 감싼다."""
     arguments = " ".join(f'"{path}"' if " " in str(path) else str(path) for path in paths)
     return f'cmd /c ""{ROOT / batch}" {arguments}"'
+
+
+def count_runs() -> int:
+    """DB에 쌓인 분석 run 수. DB가 없으면 0."""
+    database = ROOT / "data" / "patent_marker.sqlite3"
+    if not database.is_file():
+        return 0
+    connection = sqlite3.connect(str(database))
+    try:
+        return connection.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
+    finally:
+        connection.close()
 
 
 def venv_version(python: Path) -> str:
@@ -103,6 +117,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--expect", required=True, help="가상환경이 쓰게 될 Python 버전 (예: 3.12)")
     parser.add_argument("--moved", action="store_true", help="설치한 폴더를 옮긴 뒤의 점검")
+    parser.add_argument("--upgraded", action="store_true",
+                        help="새 폴더에 설치하고 예전 폴더의 data·artifacts·outputs를 옮겨 온 뒤의 점검")
     args = parser.parse_args()
     if os.name != "nt":
         print("이 점검은 Windows에서만 돈다.")
@@ -114,6 +130,10 @@ def main() -> int:
     note("묶음 구성: batch 파일, 설치 패키지, 모델이 있음",
          all((ROOT / name).exists() for name in ("setup.bat", "mark.bat", "run.bat", "vendor/wheels",
                                                   "models/multilingual-e5-small/model.onnx", "requirements.lock")))
+
+    runs_before = count_runs()
+    if args.upgraded:
+        note("새 버전으로 바꾸기: 옮겨 온 기록이 있음", runs_before > 0, f"run {runs_before}개")
 
     # ---- 1. setup.bat ---------------------------------------------------------
     if args.moved:
@@ -222,6 +242,10 @@ def main() -> int:
     print(log_path.read_bytes().decode("utf-8", errors="replace"), flush=True)
     note("run.bat: 검토 화면이 127.0.0.1:8765에서 열림", status == 200 and "<html" in body.lower(),
          f"HTTP {status}" if status else error)
+
+    if args.upgraded:
+        note("새 버전으로 바꾸기: 예전 기록에 이어 새 분석이 쌓임", count_runs() > runs_before,
+             f"run {runs_before}개 -> {count_runs()}개")
 
     failed = [name for name, ok, _ in RESULTS if not ok]
     print(f"\n점검 {len(RESULTS)}개 · 통과 {len(RESULTS) - len(failed)}개 · 실패 {len(failed)}개", flush=True)

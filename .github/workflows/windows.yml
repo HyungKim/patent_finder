@@ -201,6 +201,25 @@ jobs:
       - name: 옮긴 뒤 다시 확인 (경로에 공백 포함)
         working-directory: ${{ env.PF_DIR }}
         run: python tests\windows_bundle_check.py --expect ${{ matrix.python-version }} --moved
+      - name: 새 버전으로 바꾸기 (예전 폴더는 이름을 바꾸고, 새로 풀어 기록만 옮김)
+        run: |
+          $parent = Split-Path $env:PF_DIR
+          $old = Join-Path $parent 'patent_finder_old'
+          Rename-Item -LiteralPath $env:PF_DIR -NewName 'patent_finder_old'
+          $zip = Get-ChildItem (Join-Path $env:RUNNER_TEMP 'bundle\*.zip') | Select-Object -First 1
+          Expand-Archive -LiteralPath $zip.FullName -DestinationPath $parent
+          foreach ($name in 'data', 'artifacts', 'outputs') {
+            Move-Item -LiteralPath (Join-Path $old $name) -Destination (Join-Path $env:PF_DIR $name)
+          }
+          Get-ChildItem -Force $env:PF_DIR | Select-Object -ExpandProperty Name
+      - name: 바꾼 뒤 다시 확인 (setup.bat부터, 예전 기록 유지)
+        working-directory: ${{ env.PF_DIR }}
+        run: python tests\windows_bundle_check.py --expect ${{ matrix.python-version }} --upgraded
+      - name: 예전 폴더 지우기
+        run: |
+          $old = Join-Path (Split-Path $env:PF_DIR) 'patent_finder_old'
+          Remove-Item -LiteralPath $old -Recurse -Force
+          if (Test-Path -LiteralPath $old) { throw '예전 폴더가 지워지지 않았다' }
       - name: 사업부별 합성 보고자료 분석과 정답표 대조
         working-directory: ${{ env.PF_DIR }}
         env:

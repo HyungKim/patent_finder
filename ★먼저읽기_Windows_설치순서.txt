@@ -29,6 +29,24 @@
   검토 화면  run.bat 더블클릭 -> 브라우저가 열립니다. 표시된 구간에 YES / NO 판정을 남길 수 있습니다.
             끝낼 때는 검은 창을 닫습니다.
 
+■ 새 버전으로 바꿀 때
+
+  기존 폴더에 덮어쓰지 않고, 새 폴더에 설치한 뒤 기록만 옮깁니다.
+
+  1) 검은 창을 모두 닫고, 기존 D:\patent_finder 폴더의 이름을 patent_finder_old 로 바꿉니다.
+  2) 새 zip 을 풀어 patent_finder 폴더를 D:\ 에 둡니다.
+  3) 지금까지의 판정 기록과 결과를 이어 쓰려면 patent_finder_old 안의 data, artifacts, outputs
+     세 폴더를 새 D:\patent_finder 안으로 옮깁니다. (새로 시작하려면 옮기지 않습니다)
+  4) 새 폴더의 setup.bat 을 더블클릭합니다.
+  5) mark.bat 으로 한 번 분석해 보고, 잘 되면 patent_finder_old 폴더를 지웁니다.
+
+■ 지울 때
+
+  D:\patent_finder 폴더를 지우면 끝입니다. Windows 에 따로 등록하는 것이 없습니다.
+  지우기 전에 검은 창과, 결과 파일을 열어 둔 PowerPoint 같은 프로그램을 닫습니다.
+  판정 기록(data), 학습한 분류기(artifacts), 분석 결과(outputs) 도 함께 지워지니
+  남기려면 이 세 폴더를 먼저 다른 곳에 복사해 둡니다.
+
 ■ 필요한 것
 
   Python 3.11, 3.12, 3.13 (64비트) 중 하나가 이 PC 에 설치되어 있어야 합니다.
