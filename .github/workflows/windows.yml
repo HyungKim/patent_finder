@@ -36,7 +36,8 @@ jobs:
         run: |
           python -VV
           [System.Environment]::OSVersion.VersionString
-          "culture=$((Get-Culture).Name) ansi_codepage=$([System.Text.Encoding]::Default.CodePage)"
+          "culture=$((Get-Culture).Name) ansi_codepage=$((Get-Culture).TextInfo.ANSICodePage)"
+          python -c "import locale, sys; print('python locale encoding:', locale.getpreferredencoding(False), '| stdout:', sys.stdout.encoding)"
       - name: 가상환경 만들기
         run: python -m venv .venv
       - name: pip 버전 (새 가상환경에 들어 있는 그대로)
@@ -83,7 +84,8 @@ jobs:
         run: |
           python -VV
           [System.Environment]::OSVersion.VersionString
-          "culture=$((Get-Culture).Name) ansi_codepage=$([System.Text.Encoding]::Default.CodePage)"
+          "culture=$((Get-Culture).Name) ansi_codepage=$((Get-Culture).TextInfo.ANSICodePage)"
+          python -c "import locale, sys; print('python locale encoding:', locale.getpreferredencoding(False), '| stdout:', sys.stdout.encoding)"
           Get-PSDrive -PSProvider FileSystem | Format-Table Name, @{n='FreeGB';e={[math]::Round($_.Free / 1GB, 1)}}
       - name: 묶음 내려받기와 해시 확인
         env:

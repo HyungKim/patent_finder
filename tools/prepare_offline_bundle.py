@@ -34,6 +34,9 @@ def sha256(path: Path) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--platform", default="win_amd64", help="pip 플랫폼 태그 (기본 win_amd64)")
     parser.add_argument("--python-version", default="3.11")
