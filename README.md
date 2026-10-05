@@ -175,7 +175,7 @@ PPT, DOC, HWP, HWPX, 매크로 문서, 암호화 문서, 이미지 파일은 미
 
 ## 검수 결과
 
-2026-10-05, macOS 26 arm64 (10코어, RAM 24GiB), Python 3.11.15, 합성 자료 기준. `pytest` 145개 통과(단위 113, 통합 32. 그중 7개는 실제 E5 모델 사용). 같은 날 GitHub의 Windows 러너(영문 Windows Server)에서 Python 3.11, 3.12, 3.13 각각으로 145개가 통과했다.
+2026-10-05, macOS 26 arm64 (10코어, RAM 24GiB), Python 3.11.15, 합성 자료 기준. `pytest` 148개 통과(단위 116, 통합 32. 그중 7개는 실제 E5 모델 사용). 같은 날 GitHub의 Windows 러너(영문 Windows Server)에서 Python 3.11, 3.12, 3.13 각각으로 148개가 통과했다.
 
 ### 스펙 17.1 기능·회귀 시험
 

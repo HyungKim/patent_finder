@@ -2,7 +2,7 @@
 
 운영 PC는 인터넷에서 패키지나 모델을 받지 않는다. 필요한 파일은 인터넷이 허용된 **준비 환경**에서 확보한 뒤 회사 반입 절차로 옮긴다. 운영 코드에는 다운로드 경로가 없다.
 
-> 현재 상태(2026-10-05): `setup.bat` · `mark.bat` · `run.bat` 과 3.3의 직접 명령 절차를 GitHub의 Windows 러너(영문 Windows Server)에서 Python 3.11, 3.12, 3.13 각각으로 확인했다(`.github/workflows/windows.yml`). 묶음의 wheel만으로 설치되고, 점검과 합성 자료 분석이 되며, 시험 145개가 세 버전에서 통과했다. 설치한 폴더를 다른 곳으로 옮긴 뒤에도 그대로 돌았다. 대상 회사 PC(한국어 Windows 10/11)에서는 아직 실행하지 않았다. 개발은 macOS arm64 / Python 3.11.15에서 같은 패키지 버전으로 했다. Phase 0 환경 조사에서 OS·CPU·Python 버전·설치 권한을 먼저 확정한다.
+> 현재 상태(2026-10-05): `setup.bat` · `mark.bat` · `run.bat` 과 3.3의 직접 명령 절차를 GitHub의 Windows 러너(영문 Windows Server)에서 Python 3.11, 3.12, 3.13 각각으로 확인했다(`.github/workflows/windows.yml`). 묶음의 wheel만으로 설치되고, 점검과 합성 자료 분석이 되며, 시험 148개가 세 버전에서 통과했다. `mark.bat` 을 더블클릭하면 파일 열기 창이 실제로 뜨는 것, 설치한 폴더를 다른 곳으로 옮긴 뒤에도 그대로 도는 것도 확인했다. 대상 회사 PC(한국어 Windows 10/11)에서는 아직 실행하지 않았다. 개발은 macOS arm64 / Python 3.11.15에서 같은 패키지 버전으로 했다. Phase 0 환경 조사에서 OS·CPU·Python 버전·설치 권한을 먼저 확정한다.
 
 ## 1. 반입 목록
 
