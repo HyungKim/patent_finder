@@ -338,7 +338,7 @@ def test_encrypted_pdf_is_reported_as_unsupported(tmp_path, config):
 # ---------------------------------------------------------------- TXT / MD
 def test_text_offsets_match_file_content(config):
     path = FIXTURES / "sample_notes.txt"
-    content = path.read_text(encoding="utf-8")
+    content = path.read_bytes().decode("utf-8")  # 줄바꿈을 바꾸지 않고 읽는다. Windows에서 CRLF로 받은 파일도 위치가 맞아야 한다
     result = parse_document(path, config)
     for block in result.blocks:
         locator = block.locator

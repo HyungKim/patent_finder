@@ -1,3 +1,5 @@
-# 개발·시험 전용 (운영 PC에는 필요 없음). reportlab은 합성 PDF 시험 자료 생성에만 쓴다.
+# Development and test only (not needed on the production PC).
+# reportlab is used only to generate the synthetic PDF test fixtures.
+# ASCII only: see the note at the top of requirements.lock.
 pytest==9.1.1
 reportlab==5.0.1

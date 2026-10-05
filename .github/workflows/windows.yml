@@ -1,9 +1,9 @@
-# GitHub의 Windows 러너에서 시험을 돌린다. 합성 시험 자료만 쓴다.
+# GitHub의 Windows 러너에서 설치와 시험을 확인한다. 합성 시험 자료만 쓴다.
 #
-# - tests: 저장소의 코드를 requirements.lock 그대로 설치해 pytest를 실행한다.
-#   모델 파일이 없으므로 실제 모델 시험 6개는 건너뛴다.
-# - release-bundle: 릴리스에 첨부한 설치 묶음을 받아 docs/OFFLINE_INSTALL.md 3절의 절차대로
-#   설치·점검·분석하고, 묶음 안의 시험 전체(실제 모델 포함)를 실행한다. 수동 실행에서만 돈다.
+# - tests (push·수동): 새 가상환경을 만들어 그 안의 pip(Python 3.11에 들어 있는 버전 그대로)으로
+#   requirements.lock을 설치하고, 모델을 받아 점검·합성 자료 분석·시험 전체를 실행한다.
+# - release-bundle (수동, 태그를 넣었을 때만): 릴리스에 첨부한 설치 묶음을 받아
+#   docs/OFFLINE_INSTALL.md 3절의 절차대로 설치·점검·분석하고 묶음 안의 시험 전체를 실행한다.
 #
 # 러너는 영문 Windows Server다. 한국어 Windows 10/11과는 시스템 로캘이 다르다.
 name: Windows 시험
@@ -14,18 +14,18 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 설치 묶음을 받을 릴리스 태그
-        default: v0.1.0
-        required: true
+        description: 설치 묶음을 확인할 릴리스 태그 (비우면 묶음 확인은 건너뜀)
+        default: ""
+        required: false
 
 permissions:
   contents: read
 
 jobs:
   tests:
-    name: 저장소 시험 (Windows · Python 3.11)
+    name: 설치와 시험 (Windows · Python 3.11)
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -37,16 +37,39 @@ jobs:
           python -VV
           [System.Environment]::OSVersion.VersionString
           "culture=$((Get-Culture).Name) ansi_codepage=$([System.Text.Encoding]::Default.CodePage)"
+      - name: 가상환경 만들기
+        run: python -m venv .venv
+      - name: pip 버전 (새 가상환경에 들어 있는 그대로)
+        run: .venv\Scripts\python -m pip --version
       - name: 운영 패키지 설치 (requirements.lock, 해시 검증)
-        run: python -m pip install --disable-pip-version-check --require-hashes --no-deps -r requirements.lock
+        run: .venv\Scripts\python -m pip install --disable-pip-version-check --require-hashes --no-deps --no-cache-dir -r requirements.lock
+      - name: 모델 캐시
+        id: model-cache
+        uses: actions/cache@v6
+        with:
+          path: models/multilingual-e5-small
+          key: e5-small-onnx-${{ hashFiles('tools/fetch_model.py') }}
+      - name: 모델 받기 (준비 환경용 도구)
+        if: steps.model-cache.outputs.cache-hit != 'true'
+        run: .venv\Scripts\python tools\fetch_model.py --dest models\multilingual-e5-small
+      - name: 점검 (doctor --offline)
+        env:
+          PYTHONPATH: src
+        run: .venv\Scripts\python -m patent_marker.cli doctor --offline
+      - name: 사업부별 합성 보고자료 분석
+        env:
+          PYTHONPATH: src
+        run: .venv\Scripts\python -m patent_marker.cli analyze --input tests\fixtures\divisions --output outputs\divisions-001
+      - name: 정답표 대조
+        run: .venv\Scripts\python tools\check_expected.py --results outputs\divisions-001\results.jsonl
       - name: 시험용 패키지 설치
-        run: python -m pip install --disable-pip-version-check -r requirements/dev.in
-      - name: pytest
-        run: python -m pytest -ra
+        run: .venv\Scripts\python -m pip install --disable-pip-version-check --no-cache-dir -r requirements\dev.in
+      - name: 시험 전체 (실제 모델 포함)
+        run: .venv\Scripts\python -m pytest -ra
 
   release-bundle:
     name: 릴리스 묶음 설치 (문서 절차 그대로)
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && inputs.tag != ''
     runs-on: windows-latest
     timeout-minutes: 45
     env:
@@ -85,8 +108,7 @@ jobs:
           $pf = Join-Path $root 'patent_finder'
           "설치 폴더: $pf"
           Get-ChildItem -Force $pf | Select-Object -ExpandProperty Name
-          $names = Get-ChildItem (Join-Path $pf 'tests\fixtures\divisions') | Select-Object -ExpandProperty Name
-          $names
+          Get-ChildItem (Join-Path $pf 'tests\fixtures\divisions') | Select-Object -ExpandProperty Name
           if (-not (Test-Path -LiteralPath (Join-Path $pf 'tests\fixtures\divisions\광학솔루션사업부_기술보고_합성.pptx'))) { throw '한글 파일명이 깨졌다' }
           "PF_DIR=$pf" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Python 목록 (py -0p)

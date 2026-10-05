@@ -147,11 +147,12 @@ def test_production_promotion_is_blocked_until_criteria_are_met(tmp_path):
         promote(services, "classifier-0001", test_report["report_path"], "pilot")
 
     tampered = Path(test_report["report_path"])
-    original = tampered.read_text(encoding="utf-8")
-    tampered.write_text(original.replace('"independent": true', '"independent":  true'), encoding="utf-8")
+    original = tampered.read_bytes()  # 바이트 그대로 다룬다. 텍스트 모드는 Windows에서 줄바꿈을 바꿔 써서 원래대로 돌아가지 않는다
+    assert b'"independent": true' in original
+    tampered.write_bytes(original.replace(b'"independent": true', b'"independent":  true'))
     with pytest.raises(PromotionBlocked, match="내용이 바뀐"):
         promote(services, "classifier-0001", tampered, "pilot", reason="변조 시험")
-    tampered.write_text(original, encoding="utf-8")
+    tampered.write_bytes(original)
 
     piloted = promote(services, "classifier-0001", test_report["report_path"], "pilot", reason="표본 부족, 시범 사용")
     assert piloted["stage"] == "PILOT"

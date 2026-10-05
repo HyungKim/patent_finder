@@ -1,7 +1,10 @@
-# 반입용 pip lock: Windows x86-64 / Python 3.11 대상, 해시 포함 (스펙 15.1)
-# 생성: uv pip compile (requirements/base.in + requirements/tokenizers.in --no-deps), 2026-10-04
-# 설치: python -m pip install --no-index --find-links ./vendor/wheels --require-hashes --no-deps -r requirements.lock
-# 주의: 이 lock은 대상 Windows PC에서 설치 시험을 하지 않았다. 개발 검증은 macOS arm64 / Python 3.11에서 같은 버전으로 했다.
+# pip lock for the offline install: Windows x86-64 / Python 3.11, with hashes (spec 15.1)
+# Generated with: uv pip compile (requirements/base.in + requirements/tokenizers.in --no-deps), 2026-10-04
+# Install: python -m pip install --no-index --find-links ./vendor/wheels --require-hashes --no-deps -r requirements.lock
+# Keep this file ASCII-only. pip up to 24.0 (the version bundled with Python 3.11) decodes requirements
+# files with the Windows system code page, so a non-ASCII comment makes the install fail there.
+# Not yet installed on the target company PC. CI installs it on a GitHub-hosted Windows runner
+# (.github/workflows/windows.yml); development was done on macOS arm64 / Python 3.11 with the same versions.
 
 cffi==2.1.1 \
     --hash=sha256:046bfc24911b37851ee1b51aab8bffe713d89c68c6a057b09484ce9fd5f69b4e \

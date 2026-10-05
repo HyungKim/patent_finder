@@ -1,4 +1,5 @@
-# 운영 의존성 (시험한 버전으로 고정). tokenizers는 tokenizers.in에서 따로 다룬다.
+# Runtime dependencies, pinned to the tested versions. tokenizers is handled separately in tokenizers.in.
+# ASCII only: see the note at the top of requirements.lock.
 numpy==2.4.6
 onnxruntime==1.30.0
 scikit-learn==1.9.1
