@@ -48,7 +48,7 @@ GitHub 릴리스의 설치 묶음(zip)에는 프로그램, 설치 패키지, 모
 
 1. zip을 풀어 나온 `patent_finder` 폴더를 원하는 곳(예: `D:\`)에 둔다.
 2. `setup.bat` 을 더블클릭한다. 인터넷 없이 설치하고 점검까지 한다.
-3. PPTX·PDF 파일이나 폴더를 `mark.bat` 아이콘 위에 끌어다 놓으면 분석하고 결과 폴더를 연다. 검토 화면은 `run.bat` 이다.
+3. `mark.bat` 을 더블클릭하면 파일 열기 창이 뜬다. PPTX·PDF 파일을 고르면 분석하고 결과 폴더를 연다. 파일이나 폴더를 `mark.bat` 아이콘 위에 끌어다 놓아도 된다. 검토 화면은 `run.bat` 이다.
 
 ### 점검
 
@@ -120,7 +120,7 @@ GitHub 릴리스의 설치 묶음(zip)에는 프로그램, 설치 패키지, 모
 | `export --run demo-001 --format html,jsonl,annotated` | 저장된 run의 결과물 다시 만들기 (사람 판정 반영) |
 | `experiment --snapshot … --modes separate,target_only,composed --c-values 0.3,1,3` | 특징 구성·C를 그룹 교차검증으로 비교 |
 | `verify-run --run demo-001` | 과거 판정이 같은 bundle·캐시로 재현되는지 확인 |
-| `mark 파일… 폴더…` | 여러 파일·폴더를 바로 분석. 결과는 `outputs/mark-날짜-시각` (`mark.bat` 이 쓰는 명령) |
+| `mark 파일… 폴더…` | 여러 파일·폴더를 바로 분석. 결과는 `outputs/mark-날짜-시각`. `--pick` 을 주고 경로를 생략하면 파일 열기 창에서 고른다 (`mark.bat` 이 쓰는 명령) |
 | `ingest --input …` | 분석 없이 문서만 넣기 (라벨링용) |
 | `status` | 운영 모델, 라벨 수, 재학습 제안 여부 |
 | `backup --output …` / `restore --from …` | DB 백업·복구 |
@@ -245,6 +245,7 @@ config/default.yaml            기본 설정
 src/patent_marker/
   cli.py                       명령줄 진입점
   dropped.py                   끌어다 놓은 파일 이름 되살리기 (mark.bat)
+  pickdialog.py                파일 열기 창 (mark.bat을 더블클릭했을 때)
   parsers/                     text, docx, pptx, pdf
   segmentation/                정규화, offset, 문장 분할, 논리 문단, segment, 문맥
   embeddings/                  E5(ONNX), 캐시, 특징 구성, 모델 manifest 검증

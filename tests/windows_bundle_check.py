@@ -8,7 +8,8 @@ GitHub의 Windows 러너에서 묶음을 푼 폴더 안에서 실행한다(.gith
 
 하는 일
     1) setup.bat      더블클릭했을 때처럼 실행. 다시 실행해도 되는지도 본다
-    2) mark.bat       탐색기가 파일을 끌어다 놓을 때 만드는 명령줄 그대로 (공백·한글·괄호·&가 든 이름, 폴더)
+    2) mark.bat       더블클릭하면 파일 열기 창이 뜨는지, 고른 파일을 분석하는지.
+                      탐색기가 파일을 끌어다 놓을 때 만드는 명령줄 그대로도 본다 (공백·한글·괄호·&가 든 이름, 폴더)
     3) run.bat        검토 화면을 띄워 접속되는지
 
 표준 라이브러리만 쓴다. batch 파일의 pause는 입력을 닫아 두면 바로 지나간다.
@@ -70,6 +71,22 @@ def http_get(url: str, timeout: float = 5.0) -> tuple[int, str]:
         return response.status, response.read().decode("utf-8", errors="replace")
 
 
+def close_window(title: str, timeout: float) -> bool:
+    """제목이 title인 창이 뜰 때까지 기다렸다가 닫는다(사용자가 창의 X를 누른 것과 같다). 창을 찾았으면 True."""
+    import ctypes
+
+    user32 = ctypes.windll.user32
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        handle = user32.FindWindowW(None, title)
+        if handle:
+            time.sleep(1.5)  # 창이 다 그려질 시간을 준다
+            user32.PostMessageW(handle, 0x0010, 0, 0)  # WM_CLOSE
+            return True
+        time.sleep(0.5)
+    return False
+
+
 def stop(process: subprocess.Popen) -> None:
     """run.bat이 띄운 파이썬까지 함께 끝낸다."""
     subprocess.run(["taskkill", "/F", "/T", "/PID", str(process.pid)], capture_output=True, check=False)
@@ -115,9 +132,30 @@ def main() -> int:
     note("setup.bat 다시 실행: 가상환경을 그대로 쓰고 끝까지 감", code == 0 and "이미 있음" in out and "설치 완료!" in out,
          f"종료 코드 {code}")
 
-    # ---- 2. mark.bat (끌어다 놓기) ---------------------------------------------
-    code, out = run(["cmd", "/c", "mark.bat"], env, 120, "mark.bat (파일 없이 더블클릭)")
-    note("mark.bat: 파일 없이 실행하면 사용법을 보여 줌", code == 1 and "끌어다 놓으세요" in out, f"종료 코드 {code}")
+    # ---- 2. mark.bat (더블클릭 → 파일 열기 창) -----------------------------------
+    sys.path.insert(0, str(ROOT / "src"))
+    from patent_marker.pickdialog import PRESET_ENV, TITLE
+
+    result = subprocess.run([str(python), "-c", "import tkinter; r = tkinter.Tk(); r.withdraw(); r.destroy(); print('ok')"],
+                            capture_output=True, text=True, timeout=120, check=False)
+    note("가상환경의 Python에 파일 선택 창 부품(tkinter)이 있음", result.returncode == 0 and "ok" in result.stdout,
+         (result.stderr or "").strip().splitlines()[-1] if result.returncode else "")
+
+    print("\n----- mark.bat (더블클릭: 열기 창이 뜨면 닫는다) -----", flush=True)
+    log_path = Path(tempfile.gettempdir()) / "pf-mark-pick.log"
+    with log_path.open("wb") as log:
+        process = subprocess.Popen(["cmd", "/c", "mark.bat"], cwd=str(ROOT), env=env, stdin=subprocess.DEVNULL,
+                                   stdout=log, stderr=subprocess.STDOUT)
+        appeared = close_window(TITLE, 90)
+        try:
+            code = process.wait(timeout=60)
+        except subprocess.TimeoutExpired:
+            code = -1
+            stop(process)
+    out = log_path.read_bytes().decode("utf-8", errors="replace")
+    print(out, flush=True)
+    note("mark.bat 더블클릭: 파일 열기 창이 뜸", appeared)
+    note("mark.bat 더블클릭: 창을 닫으면 분석하지 않고 끝남", code == 0 and "파일을 고르지 않았습니다" in out, f"종료 코드 {code}")
 
     work = Path(tempfile.mkdtemp(prefix="pf-drop-"))
     ampersand = work / "R&D현황.pptx"
@@ -129,9 +167,19 @@ def main() -> int:
     shutil.copyfile(FIXTURES / "sample_report.docx", folder / "검토 메모.docx")
     shutil.copyfile(FIXTURES / "sample_notes.txt", folder / "노트.txt")
     before = {path.name for path in (ROOT / "outputs").glob("mark-*")} if (ROOT / "outputs").is_dir() else set()
+    # 열기 창에서 파일 둘을 고른 것으로 하고(창은 띄우지 않는다) 끝까지 분석되는지
+    code, out = run(["cmd", "/c", "mark.bat"], dict(env, **{PRESET_ENV: f"{ampersand}|{spaced}"}), 1800,
+                    "mark.bat (더블클릭: 열기 창에서 파일 둘을 고름)")
+    picked = sorted(path for path in (ROOT / "outputs").glob("mark-*") if path.name not in before)
+    marked = sorted(path.name for path in (picked[0] / "marked").iterdir()) if picked and (picked[0] / "marked").is_dir() else []
+    note("mark.bat 더블클릭: 고른 파일을 분석해 마킹 사본을 만듦",
+         code == 0 and marked == ["R&D현황.marked.pptx", "최종 보고서 (2차).marked.pdf"], f"종료 코드 {code} · {', '.join(marked)}")
+    before = {path.name for path in (ROOT / "outputs").glob("mark-*")}
+
+    # ---- 2-2. mark.bat (끌어다 놓기) --------------------------------------------
     code, out = run(drop("mark.bat", [ampersand, spaced, folder]), env, 1800,
                     "mark.bat (파일 둘과 폴더 하나를 끌어다 놓음: &, 공백, 괄호, 한글)")
-    note("mark.bat: 끝까지 실행 (종료 코드 0)", code == 0, f"종료 코드 {code}")
+    note("mark.bat 끌어다 놓기: 끝까지 실행 (종료 코드 0)", code == 0, f"종료 코드 {code}")
     note("mark.bat: 검은 창에 진행 상황과 결과 폴더가 한글로 찍힘", "결과 폴더:" in out and "R&D현황.pptx" in out)
     created = sorted(path for path in (ROOT / "outputs").glob("mark-*") if path.name not in before)
     note("mark.bat: 결과 폴더가 하나 생김", len(created) == 1, ", ".join(path.name for path in created))

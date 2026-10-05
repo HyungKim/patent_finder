@@ -227,12 +227,25 @@ def _open_folder(path: Path) -> None:
 
 
 def cmd_mark(args: argparse.Namespace, config: AppConfig) -> int:
-    """파일이나 폴더를 받아 바로 분석한다. mark.bat에 끌어다 놓는 방식의 진입점이다."""
+    """파일이나 폴더를 받아 바로 분석한다. mark.bat의 진입점이다(더블클릭해 열기 창에서 고르거나 끌어다 놓기)."""
     from .analysis import run_analysis
     from .dropped import recover_dropped
     from .export.runner import export_run
 
-    paths = [Path(item).resolve() for item in recover_dropped(list(args.paths), os.environ.get("PM_CMDLINE"))]
+    chosen = recover_dropped(list(args.paths), os.environ.get("PM_CMDLINE"))
+    if not chosen and args.pick:
+        from .pickdialog import PickerUnavailable, pick_files
+
+        try:
+            chosen = pick_files()
+        except PickerUnavailable as exc:
+            _print(f"오류: {exc}")
+            _print("분석할 파일이나 폴더를 mark.bat 아이콘 위에 끌어다 놓는 방법은 그대로 쓸 수 있습니다.")
+            return EXIT_ERROR
+        if not chosen:
+            _print("파일을 고르지 않았습니다. 분석하지 않고 끝냅니다.")
+            return EXIT_OK
+    paths = [Path(item).resolve() for item in chosen]
     missing = [str(path) for path in paths if not path.exists()]
     if not paths or missing:
         _print("오류: 분석할 파일을 찾지 못했습니다." + (" 없는 경로: " + ", ".join(missing) if missing else ""))
@@ -536,8 +549,9 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--encoding", help="TXT/MD 인코딩 (기본 UTF-8)")
     analyze.add_argument("--format", help="html,jsonl,annotated 중 선택 (기본: 설정값)")
 
-    mark = add("mark", cmd_mark, "파일·폴더를 바로 분석 (mark.bat에 끌어다 놓는 방식)")
+    mark = add("mark", cmd_mark, "파일·폴더를 바로 분석 (mark.bat: 열기 창에서 고르거나 끌어다 놓기)")
     mark.add_argument("paths", nargs="*", help="분석할 파일 또는 폴더 (여러 개 가능)")
+    mark.add_argument("--pick", action="store_true", help="경로를 주지 않았으면 파일 열기 창에서 고르기")
     mark.add_argument("--open", action="store_true", help="끝나면 결과 폴더 열기 (Windows)")
     mark.add_argument("--encoding", help="TXT/MD 인코딩 (기본 UTF-8)")
 

@@ -136,6 +136,15 @@ def test_cli_mark_analyzes_dropped_files_into_new_run_folders(cli_env, capsys, m
     assert main(["mark", "--config", config, str(inbox)]) == 0  # 폴더째로. 바로 이어 실행해도 다른 run 폴더를 쓴다
     assert len(list((base / "outputs").glob("mark-*"))) == 2
 
+    # mark.bat을 더블클릭했을 때: 경로 없이 실행되고, 열기 창에서 고른 파일을 분석한다
+    capsys.readouterr()
+    monkeypatch.setenv("PM_PICK_PATHS", f"{amp}|{pdf}")
+    assert main(["mark", "--config", config, "--pick"]) == 0
+    assert "R&D현황.pptx" in capsys.readouterr().out
+    picked_run = sorted((base / "outputs").glob("mark-*"))[-1]
+    assert sorted(p.name for p in (picked_run / "marked").iterdir()) == ["R&D현황.marked.pptx", "sample_report.marked.pdf"]
+    assert len(list((base / "outputs").glob("mark-*"))) == 3
+
 
 def test_cli_doctor_status_backup_and_blocked_training(cli_env, capsys):
     base, config, inbox = cli_env

@@ -55,7 +55,8 @@ if errorlevel 1 goto failed
 echo.
 echo ============================================================
 echo   설치 완료!
-echo     분석       PPTX, PDF 파일이나 폴더를 mark.bat 아이콘 위에 끌어다 놓기
+echo     분석       mark.bat 더블클릭 - 파일 열기 창에서 PPTX, PDF 파일 고르기
+echo                ^(파일이나 폴더를 mark.bat 아이콘 위에 끌어다 놓아도 됩니다^)
 echo     검토 화면  run.bat 더블클릭
 echo ============================================================
 pause

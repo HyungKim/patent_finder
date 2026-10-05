@@ -8,11 +8,13 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+import types
 from pathlib import Path
 
 import pytest
 
 from helpers import FIXTURES, REPO_ROOT
+from patent_marker import pickdialog
 from patent_marker.analysis import run_analysis
 from patent_marker.cli import main
 from patent_marker.dropped import recover_dropped
@@ -53,7 +55,7 @@ def test_batch_files_point_at_things_that_exist():
     for version in ("3.11", "3.12", "3.13"):
         assert f"py -{version}" in setup
     mark = (REPO_ROOT / "mark.bat").read_bytes().decode("utf-8")
-    assert "-m patent_marker.cli mark --open %*" in mark and "PM_CMDLINE" in mark
+    assert "-m patent_marker.cli mark --open --pick %*" in mark and "PM_CMDLINE" in mark
     run = (REPO_ROOT / "run.bat").read_bytes().decode("utf-8")
     assert "-m patent_marker.cli review --port %PORT%" in run
     for text in (mark, run):
@@ -86,6 +88,80 @@ def test_mark_command_reports_missing_paths_without_loading_the_model(tmp_path, 
     assert main(["mark", "--config", str(config), str(tmp_path / "없는파일.pptx")]) == 1
     assert "분석할 파일을 찾지 못했습니다" in capsys.readouterr().out
     assert main(["mark", "--config", str(config)]) == 1
+
+
+# ---------------------------------------------------------------- 파일 열기 창
+def _fake_tkinter(monkeypatch, selection):
+    """tkinter를 흉내 낸다. 열기 창에 넘어간 인자와 정리 여부를 calls에 남긴다."""
+    calls: dict = {}
+
+    class FakeRoot:
+        def __init__(self):
+            self.tk = self
+
+        def withdraw(self):
+            calls["withdrawn"] = True
+
+        def attributes(self, *args):
+            calls["attributes"] = args
+
+        def update(self):
+            pass
+
+        def destroy(self):
+            calls["destroyed"] = True
+
+        def splitlist(self, value):
+            return value
+
+    def askopenfilenames(**kwargs):
+        calls["dialog"] = kwargs
+        return selection
+
+    fake_tk = types.ModuleType("tkinter")
+    fake_tk.Tk = FakeRoot
+    fake_tk.TclError = RuntimeError
+    fake_dialog = types.ModuleType("tkinter.filedialog")
+    fake_dialog.askopenfilenames = askopenfilenames
+    fake_tk.filedialog = fake_dialog
+    monkeypatch.setitem(sys.modules, "tkinter", fake_tk)
+    monkeypatch.setitem(sys.modules, "tkinter.filedialog", fake_dialog)
+    monkeypatch.delenv(pickdialog.PRESET_ENV, raising=False)
+    return calls
+
+
+def test_picker_opens_a_multi_select_dialog_and_returns_native_paths(monkeypatch):
+    calls = _fake_tkinter(monkeypatch, ("C:/자료/R&D 현황.pptx", "C:/자료/b.pdf"))
+    assert pickdialog.pick_files() == [str(Path("C:/자료/R&D 현황.pptx")), str(Path("C:/자료/b.pdf"))]
+    assert calls["dialog"]["title"] == pickdialog.TITLE and calls["withdrawn"] and calls["destroyed"]
+    assert calls["attributes"] == ("-topmost", True)  # 다른 창 뒤에 숨지 않게
+    assert "initialdir" not in calls["dialog"]  # 시작 폴더를 정하지 않아 Windows가 지난번 폴더에서 연다
+    patterns = " ".join(pattern for _, pattern in calls["dialog"]["filetypes"])
+    assert all(extension in patterns for extension in ("*.pptx", "*.pdf", "*.docx"))
+
+
+def test_picker_cancel_preset_and_missing_tkinter(monkeypatch):
+    _fake_tkinter(monkeypatch, "")  # 창을 그냥 닫으면 빈 문자열이 온다
+    assert pickdialog.pick_files() == []
+    monkeypatch.setenv(pickdialog.PRESET_ENV, "a.pptx|b.pdf")  # 자동 점검용: 창을 띄우지 않는다
+    assert pickdialog.pick_files() == ["a.pptx", "b.pdf"]
+    monkeypatch.delenv(pickdialog.PRESET_ENV)
+    monkeypatch.setitem(sys.modules, "tkinter", None)  # tkinter가 빠진 Python
+    with pytest.raises(pickdialog.PickerUnavailable, match="tkinter"):
+        pickdialog.pick_files()
+
+
+def test_mark_pick_handles_cancel_and_missing_tkinter_without_loading_the_model(tmp_path, capsys, monkeypatch):
+    config = tmp_path / "config.yaml"
+    config.write_text("paths:\n  base_dir: .\n  e5: models/not-there\nruntime:\n  offline: false\n", encoding="utf-8")
+    monkeypatch.setenv(pickdialog.PRESET_ENV, "")  # 열기 창에서 취소
+    assert main(["mark", "--config", str(config), "--pick"]) == 0
+    assert "파일을 고르지 않았습니다" in capsys.readouterr().out
+    monkeypatch.delenv(pickdialog.PRESET_ENV)
+    monkeypatch.setitem(sys.modules, "tkinter", None)
+    assert main(["mark", "--config", str(config), "--pick"]) == 1
+    out = capsys.readouterr().out
+    assert "tkinter" in out and "끌어다 놓는 방법" in out
 
 
 def test_analysis_accepts_several_files_and_folders(services, tmp_path):

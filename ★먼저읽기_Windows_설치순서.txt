@@ -19,7 +19,8 @@
 
 ■ 쓸 때
 
-  분석      PPTX, PDF 파일이나 폴더를 mark.bat 아이콘 위에 끌어다 놓습니다 (여러 개 가능).
+  분석      mark.bat 더블클릭 -> 파일 열기 창에서 PPTX, PDF 파일을 고릅니다 (Ctrl, Shift 로 여러 개).
+            폴더째 분석하려면 파일이나 폴더를 mark.bat 아이콘 위에 끌어다 놓습니다.
             끝나면 결과 폴더가 열립니다.
               report.html   표시된 구간 목록
               marked        표시가 들어간 PPTX, PDF 사본
