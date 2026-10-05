@@ -175,14 +175,14 @@ PPT, DOC, HWP, HWPX, 매크로 문서, 암호화 문서, 이미지 파일은 미
 
 ## 검수 결과
 
-2026-10-05, macOS 26 arm64 (10코어, RAM 24GiB), Python 3.11.15, 합성 자료 기준. `pytest` 133개 통과(단위 102, 통합 31. 그중 6개는 실제 E5 모델 사용). 같은 날 GitHub의 Windows 러너(영문 Windows Server, Python 3.11.9)에서도 133개가 통과했다.
+2026-10-05, macOS 26 arm64 (10코어, RAM 24GiB), Python 3.11.15, 합성 자료 기준. `pytest` 145개 통과(단위 113, 통합 32. 그중 7개는 실제 E5 모델 사용). 같은 날 GitHub의 Windows 러너(영문 Windows Server)에서 Python 3.11, 3.12, 3.13 각각으로 145개가 통과했다.
 
 ### 스펙 17.1 기능·회귀 시험
 
 | 항목 | 결과 | 근거 |
 |---|---|---|
 | 네트워크 가드를 켠 채 로컬 파일만으로 분석·재학습·export | 통과 | `test_cli_analyze_runs_fully_offline…`: 접속 시도 0건. CLI로 train·evaluate·promote까지 실행 |
-| 반입 wheel만으로 설치 | 통과 (Windows 러너) | 0.1.1 묶음을 GitHub의 Windows 러너에 풀어 `--no-index` 로 설치하고 점검·분석·시험까지 실행. 대상 회사 PC에서는 아직 설치해 보지 않음 |
+| 반입 wheel만으로 설치 | 통과 (Windows 러너) | 설치 묶음과 같은 폴더에서 `setup.bat` 으로 인터넷 없이 설치하고 `mark.bat`, `run.bat` 까지 실행. Python 3.11·3.12·3.13 각각. 대상 회사 PC에서는 아직 설치해 보지 않음 |
 | 모델 누락 시 즉시 오류, 다운로드 시도 없음 | 통과 | `test_missing_model_fails_without_any_download_attempt`, `test_cli_rejects_missing_model…` |
 | GPU가 있어도 CPU 실행 | 통과 | CoreML provider가 있는 Mac에서 세션 provider가 CPU뿐임을 확인 |
 | 혼용 텍스트·단위·부정문·목록·표·긴 문단·반복 문자열의 위치 보존 | 통과 | `test_text_processing.py`, `test_parsers.py` |
