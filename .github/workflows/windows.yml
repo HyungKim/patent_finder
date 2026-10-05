@@ -1,9 +1,11 @@
 # GitHub의 Windows 러너에서 설치와 시험을 확인한다. 합성 시험 자료만 쓴다.
+# Python 3.11, 3.12, 3.13 각각에서 돈다.
 #
-# - tests (push·수동): 새 가상환경을 만들어 그 안의 pip(Python 3.11에 들어 있는 버전 그대로)으로
+# - tests (push·수동): 새 가상환경을 만들어 그 안의 pip(그 Python에 들어 있는 버전 그대로)으로
 #   requirements.lock을 설치하고, 모델을 받아 점검·합성 자료 분석·시험 전체를 실행한다.
-# - release-bundle (수동, 태그를 넣었을 때만): 릴리스에 첨부한 설치 묶음을 받아
-#   docs/OFFLINE_INSTALL.md 3절의 절차대로 설치·점검·분석하고 묶음 안의 시험 전체를 실행한다.
+# - release-bundle (수동, 태그를 넣었을 때만): 릴리스에 첨부한 설치 묶음을 받아 풀고
+#   setup.bat · mark.bat · run.bat을 사용자가 하듯이 실행한 뒤(tests/windows_bundle_check.py),
+#   폴더를 옮겨서 다시 확인하고, 묶음 안의 시험 전체를 실행한다.
 #
 # 러너는 영문 Windows Server다. 한국어 Windows 10/11과는 시스템 로캘이 다르다.
 name: Windows 시험
@@ -23,14 +25,18 @@ permissions:
 
 jobs:
   tests:
-    name: 설치와 시험 (Windows · Python 3.11)
+    name: 설치와 시험 (Python ${{ matrix.python-version }})
     runs-on: windows-latest
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
           architecture: x64
       - name: 환경 확인
         run: |
@@ -69,30 +75,37 @@ jobs:
         run: .venv\Scripts\python -m pytest -ra
 
   release-bundle:
-    name: 릴리스 묶음 설치 (문서 절차 그대로)
+    name: 설치 묶음 (setup.bat · Python ${{ matrix.python-version }})
     if: github.event_name == 'workflow_dispatch' && inputs.tag != ''
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     env:
       TAG: ${{ inputs.tag }}
+      # 3.11에서는 지정하지 않아 setup.bat이 스스로 찾게 하고, 나머지는 그 버전을 쓰게 한다.
+      PM_PYTHON: ${{ matrix.python-version != '3.11' && format('py -{0}', matrix.python-version) || '' }}
     steps:
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
           architecture: x64
       - name: 환경 확인
         run: |
           python -VV
           [System.Environment]::OSVersion.VersionString
           "culture=$((Get-Culture).Name) ansi_codepage=$((Get-Culture).TextInfo.ANSICodePage)"
-          python -c "import locale, sys; print('python locale encoding:', locale.getpreferredencoding(False), '| stdout:', sys.stdout.encoding)"
+          "PM_PYTHON=[$env:PM_PYTHON]"
+          py -0p
           Get-PSDrive -PSProvider FileSystem | Format-Table Name, @{n='FreeGB';e={[math]::Round($_.Free / 1GB, 1)}}
       - name: 묶음 내려받기와 해시 확인
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           $dir = Join-Path $env:RUNNER_TEMP 'bundle'
-          gh release download $env:TAG --repo $env:GITHUB_REPOSITORY --pattern 'patent_finder-*-windows-x64-py311.zip' --dir $dir
+          gh release download $env:TAG --repo $env:GITHUB_REPOSITORY --pattern 'patent_finder-*-windows-x64*.zip' --dir $dir
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $zip = Get-ChildItem (Join-Path $dir '*.zip') | Select-Object -First 1
           $release = gh release view $env:TAG --repo $env:GITHUB_REPOSITORY --json assets | ConvertFrom-Json
@@ -110,39 +123,31 @@ jobs:
           $pf = Join-Path $root 'patent_finder'
           "설치 폴더: $pf"
           Get-ChildItem -Force $pf | Select-Object -ExpandProperty Name
-          Get-ChildItem (Join-Path $pf 'tests\fixtures\divisions') | Select-Object -ExpandProperty Name
           if (-not (Test-Path -LiteralPath (Join-Path $pf 'tests\fixtures\divisions\광학솔루션사업부_기술보고_합성.pptx'))) { throw '한글 파일명이 깨졌다' }
+          "PF_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "PF_DIR=$pf" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      - name: Python 목록 (py -0p)
-        continue-on-error: true
-        run: py -0p
-      - name: 가상환경 만들기
+      - name: setup.bat · mark.bat · run.bat 확인
         working-directory: ${{ env.PF_DIR }}
-        run: python -m venv .venv
-      - name: 설치 (묶음의 wheel만 사용, 인터넷 없이)
+        run: python tests\windows_bundle_check.py --expect ${{ matrix.python-version }}
+      - name: 설치한 폴더를 다른 곳으로 옮기기
+        run: |
+          $moved = Join-Path $env:PF_ROOT 'moved here\patent_finder'
+          New-Item -ItemType Directory -Path (Split-Path $moved) | Out-Null
+          Move-Item -LiteralPath $env:PF_DIR -Destination $moved
+          if (Test-Path -LiteralPath $env:PF_DIR) { throw '옮긴 뒤에도 원래 폴더가 남아 있다' }
+          "옮긴 폴더: $moved"
+          "PF_DIR=$moved" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: 옮긴 뒤 다시 확인 (경로에 공백 포함)
         working-directory: ${{ env.PF_DIR }}
-        run: .venv\Scripts\python -m pip install --no-index --find-links .\vendor\wheels --require-hashes --no-deps --no-cache-dir -r requirements.lock
-      - name: 점검 (doctor --offline)
-        working-directory: ${{ env.PF_DIR }}
-        env:
-          PYTHONPATH: src
-        run: .venv\Scripts\python -m patent_marker.cli doctor --offline
-      - name: 사업부별 합성 보고자료 분석
-        working-directory: ${{ env.PF_DIR }}
-        env:
-          PYTHONPATH: src
-        run: .venv\Scripts\python -m patent_marker.cli analyze --input tests\fixtures\divisions --output outputs\divisions-001
-      - name: 정답표 대조
-        working-directory: ${{ env.PF_DIR }}
-        run: .venv\Scripts\python tools\check_expected.py --results outputs\divisions-001\results.jsonl
-      - name: 형식별 작은 자료 분석 (PPTX, PDF, DOCX, TXT, MD)
+        run: python tests\windows_bundle_check.py --expect ${{ matrix.python-version }} --moved
+      - name: 사업부별 합성 보고자료 분석과 정답표 대조
         working-directory: ${{ env.PF_DIR }}
         env:
           PYTHONPATH: src
-        run: .venv\Scripts\python -m patent_marker.cli analyze --input tests\fixtures\synthetic --output outputs\demo-001
-      - name: 결과물 목록
-        working-directory: ${{ env.PF_DIR }}
-        run: Get-ChildItem -Recurse outputs | Select-Object FullName, Length | Format-Table -AutoSize
+        run: |
+          .venv\Scripts\python -m patent_marker.cli analyze --input tests\fixtures\divisions --output outputs\divisions-001
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv\Scripts\python tools\check_expected.py --results outputs\divisions-001\results.jsonl
       - name: 시험용 패키지 설치 (인터넷 사용)
         working-directory: ${{ env.PF_DIR }}
         run: .venv\Scripts\python -m pip install --disable-pip-version-check --no-cache-dir -r requirements\dev.in

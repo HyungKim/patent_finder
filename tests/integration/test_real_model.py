@@ -115,6 +115,28 @@ def test_cli_analyze_runs_fully_offline_and_marks_known_candidates(cli_env, caps
     assert (base / "outputs" / "again" / "results.jsonl").is_file()
 
 
+def test_cli_mark_analyzes_dropped_files_into_new_run_folders(cli_env, capsys, monkeypatch):
+    base, config, inbox = cli_env
+    monkeypatch.setenv("PM_NO_OPEN", "1")
+    dropped = base / "끌어온자료"
+    dropped.mkdir()
+    amp = dropped / "R&D현황.pptx"
+    amp.write_bytes((inbox / "sample_report.pptx").read_bytes())
+    pdf = inbox / "sample_report.pdf"
+    # cmd가 & 앞에서 자른 이름을 넘겼을 때: 명령줄 전체(PM_CMDLINE)에서 원래 이름을 되살린다
+    monkeypatch.setenv("PM_CMDLINE", f'cmd /c ""D:\\pf\\mark.bat" {amp} {pdf}"')
+    assert main(["mark", "--config", config, str(dropped / "R")]) == 0
+    assert "결과 폴더:" in capsys.readouterr().out
+    runs = sorted((base / "outputs").glob("mark-*"))
+    assert len(runs) == 1 and (runs[0] / "report.html").is_file()
+    assert sorted(p.name for p in (runs[0] / "marked").iterdir()) == ["R&D현황.marked.pptx", "sample_report.marked.pdf"]
+    assert runtime.sha256_file(amp) == runtime.sha256_file(inbox / "sample_report.pptx")  # 원본은 그대로
+
+    monkeypatch.delenv("PM_CMDLINE")
+    assert main(["mark", "--config", config, str(inbox)]) == 0  # 폴더째로. 바로 이어 실행해도 다른 run 폴더를 쓴다
+    assert len(list((base / "outputs").glob("mark-*"))) == 2
+
+
 def test_cli_doctor_status_backup_and_blocked_training(cli_env, capsys):
     base, config, inbox = cli_env
     assert main(["doctor", "--offline", "--config", config]) == 0

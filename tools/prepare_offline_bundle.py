@@ -7,7 +7,10 @@
 
 사용법 (기본: Windows x86-64, Python 3.11):
     python tools/prepare_offline_bundle.py
+    python tools/prepare_offline_bundle.py --python-version 3.11 3.12 3.13
     python tools/prepare_offline_bundle.py --platform manylinux_2_28_x86_64 --python-version 3.11
+
+pip download를 쓰므로 pip이 들어 있는 Python으로 실행한다 (uv venv로 만든 환경에는 pip이 없다).
 
 주의: 이 도구의 다운로드 단계는 대상 Windows PC에서의 설치까지 검증된 것이 아니다.
 반입 후 운영 PC에서 docs/OFFLINE_INSTALL.md의 설치·점검 절차를 반드시 수행한다.
@@ -39,7 +42,8 @@ def main(argv: list[str] | None = None) -> int:
             stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--platform", default="win_amd64", help="pip 플랫폼 태그 (기본 win_amd64)")
-    parser.add_argument("--python-version", default="3.11")
+    parser.add_argument("--python-version", nargs="+", default=["3.11"],
+                        help="대상 Python 버전. 여러 개를 주면 버전마다 받아 한 폴더에 모은다 (예: 3.11 3.12 3.13)")
     parser.add_argument("--lock", default=str(ROOT / "requirements.lock"))
     parser.add_argument("--dest", default=str(ROOT / "vendor" / "wheels"))
     parser.add_argument("--model-dir", default=str(ROOT / "models" / "multilingual-e5-small"))
@@ -47,17 +51,19 @@ def main(argv: list[str] | None = None) -> int:
 
     dest = Path(args.dest)
     dest.mkdir(parents=True, exist_ok=True)
-    abi = "cp" + args.python_version.replace(".", "")
-    command = [
-        sys.executable, "-m", "pip", "download", "--dest", str(dest), "--only-binary=:all:", "--no-deps",
-        "--platform", args.platform, "--python-version", args.python_version, "--implementation", "cp",
-        "--abi", abi, "--abi", "abi3", "--abi", "none", "--require-hashes", "-r", args.lock,
-    ]
-    print("[1/3] wheel 내려받기:", " ".join(command))
-    result = subprocess.run(command, check=False)
-    if result.returncode != 0:
-        print("오류: pip download 실패. lock 파일이 대상 플랫폼·Python 버전과 맞는지 확인하세요.", file=sys.stderr)
-        return result.returncode
+    for version in args.python_version:
+        abi = "cp" + version.replace(".", "")
+        command = [
+            sys.executable, "-m", "pip", "download", "--dest", str(dest), "--only-binary=:all:", "--no-deps",
+            "--platform", args.platform, "--python-version", version, "--implementation", "cp",
+            "--abi", abi, "--abi", "abi3", "--abi", "none", "--require-hashes", "-r", args.lock,
+        ]
+        print(f"[1/3] wheel 내려받기 (Python {version}):", " ".join(command))
+        result = subprocess.run(command, check=False)
+        if result.returncode != 0:
+            print("오류: pip download 실패. lock 파일이 대상 플랫폼·Python 버전과 맞는지, 이 Python에 pip이 있는지 "
+                  "확인하세요.", file=sys.stderr)
+            return result.returncode
 
     print("[2/3] 모델 manifest 확인")
     model_dir = Path(args.model_dir)
@@ -75,9 +81,9 @@ def main(argv: list[str] | None = None) -> int:
     wheels = [{"file": path.name, "size": path.stat().st_size, "sha256": sha256(path)}
               for path in sorted(dest.glob("*.whl"))]
     bundle = {
-        "schema_version": 1,
+        "schema_version": 2,
         "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "target": {"platform": args.platform, "python": args.python_version},
+        "target": {"platform": args.platform, "pythons": list(args.python_version)},
         "lock_file": {"path": Path(args.lock).name, "sha256": sha256(Path(args.lock))},
         "wheels": wheels,
         "model": {"model_id": model["model_id"], "revision": model["revision"], "license": model["license"],

@@ -2,6 +2,7 @@
 
     python -m patent_marker.cli doctor --offline
     python -m patent_marker.cli analyze --input ./data/inbox --output ./outputs/run-001
+    python -m patent_marker.cli mark 보고서.pptx 자료폴더
     python -m patent_marker.cli review --host 127.0.0.1
 
 긴 작업은 진행 상황을 출력하고, 중단되면 같은 명령을 다시 실행해 이어서 진행할 수 있다.
@@ -196,18 +197,62 @@ def cmd_analyze(args: argparse.Namespace, config: AppConfig) -> int:
     run_id = args.run_id or output.name
     services = _services(config)
     summary = run_analysis(services, source, run_id, encoding=args.encoding, progress=_print)
-    stage_text = {"SEED": "임시 후보(SEED · 미검증)", "PILOT": "파일럿 모델", "PRODUCTION": "운영 모델"}
-    _print(f"\nrun {run_id}: {summary['status']} · 모델 {summary['model_version'] or '없음'}"
-           f" ({stage_text.get(summary['stage'], 'UNTRAINED')}) · 구간 {summary['segments']}개")
-    memory = summary["details"]["memory"]
-    _print(f"처리 {summary['details']['elapsed_seconds']}s · peak RSS {memory['peak_rss_gib']}GiB"
-           f" (예산 {memory['budget_gib']}GiB {'이내' if memory['within_budget'] else '초과'})")
+    _print_run_summary(run_id, summary)
     formats = args.format.split(",") if args.format else None
     result = export_run(services.database, config, run_id, output, formats)
     _print("결과물:")
     _print_export(result)
     if summary["stage"] == "SEED":
         _print("\n주의: 합성 seed 분류기의 임시 결과입니다. 실제 문서에서의 Recall은 측정되지 않았습니다.")
+    return EXIT_OK
+
+
+def _print_run_summary(run_id: str, summary: dict[str, Any]) -> None:
+    stage_text = {"SEED": "임시 후보(SEED · 미검증)", "PILOT": "파일럿 모델", "PRODUCTION": "운영 모델"}
+    _print(f"\nrun {run_id}: {summary['status']} · 모델 {summary['model_version'] or '없음'}"
+           f" ({stage_text.get(summary['stage'], 'UNTRAINED')}) · 구간 {summary['segments']}개")
+    memory = summary["details"]["memory"]
+    _print(f"처리 {summary['details']['elapsed_seconds']}s · peak RSS {memory['peak_rss_gib']}GiB"
+           f" (예산 {memory['budget_gib']}GiB {'이내' if memory['within_budget'] else '초과'})")
+
+
+def _open_folder(path: Path) -> None:
+    """결과 폴더를 탐색기로 연다. Windows에서만 하고, PM_NO_OPEN이 있으면 건너뛴다."""
+    if sys.platform != "win32" or os.environ.get("PM_NO_OPEN"):
+        return
+    try:
+        os.startfile(str(path))  # type: ignore[attr-defined]
+    except OSError:
+        pass
+
+
+def cmd_mark(args: argparse.Namespace, config: AppConfig) -> int:
+    """파일이나 폴더를 받아 바로 분석한다. mark.bat에 끌어다 놓는 방식의 진입점이다."""
+    from .analysis import run_analysis
+    from .dropped import recover_dropped
+    from .export.runner import export_run
+
+    paths = [Path(item).resolve() for item in recover_dropped(list(args.paths), os.environ.get("PM_CMDLINE"))]
+    missing = [str(path) for path in paths if not path.exists()]
+    if not paths or missing:
+        _print("오류: 분석할 파일을 찾지 못했습니다." + (" 없는 경로: " + ", ".join(missing) if missing else ""))
+        return EXIT_ERROR
+    services = _services(config)
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    run_id, number = f"mark-{stamp}", 2
+    while services.database.query_one("SELECT 1 FROM runs WHERE run_id = ?", (run_id,)) is not None:
+        run_id, number = f"mark-{stamp}-{number}", number + 1
+    output = config.outputs_dir / run_id
+    summary = run_analysis(services, paths, run_id, encoding=args.encoding, progress=_print)
+    _print_run_summary(run_id, summary)
+    result = export_run(services.database, config, run_id, output, None)
+    _print("결과물:")
+    _print_export(result)
+    if summary["stage"] == "SEED":
+        _print("\n주의: 합성 seed 분류기의 임시 결과입니다. 실제 문서에서의 Recall은 측정되지 않았습니다.")
+    _print(f"\n결과 폴더: {output}")
+    if args.open:
+        _open_folder(output)
     return EXIT_OK
 
 
@@ -490,6 +535,11 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--run-id", help="run 이름 (기본: 출력 디렉터리 이름)")
     analyze.add_argument("--encoding", help="TXT/MD 인코딩 (기본 UTF-8)")
     analyze.add_argument("--format", help="html,jsonl,annotated 중 선택 (기본: 설정값)")
+
+    mark = add("mark", cmd_mark, "파일·폴더를 바로 분석 (mark.bat에 끌어다 놓는 방식)")
+    mark.add_argument("paths", nargs="*", help="분석할 파일 또는 폴더 (여러 개 가능)")
+    mark.add_argument("--open", action="store_true", help="끝나면 결과 폴더 열기 (Windows)")
+    mark.add_argument("--encoding", help="TXT/MD 인코딩 (기본 UTF-8)")
 
     export = add("export", cmd_export, "저장된 run의 결과물 다시 만들기")
     export.add_argument("--run", required=True)

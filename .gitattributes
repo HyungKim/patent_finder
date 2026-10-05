@@ -4,3 +4,8 @@
 *.pdf  binary
 *.pptx binary
 *.docx binary
+
+# batch 파일은 CRLF여야 cmd가 제대로 읽는다. 저장된 바이트 그대로 내보낸다(줄바꿈 변환 없음).
+*.bat -text
+# Windows 메모장에서 바로 읽는 안내문도 CRLF 그대로 둔다.
+*설치순서.txt -text

@@ -9,7 +9,7 @@
 | 종류 | 내용 | 확인 방법 |
 |---|---|---|
 | 저장소 | 이 Git 저장소 (코드, 설정, 합성 시험 자료, 문서) | commit hash |
-| 설치 패키지 | `requirements.lock` 에 적힌 wheel 28개 (대상 OS·Python용) | lock의 sha256, `vendor/BUNDLE_MANIFEST.json` |
+| 설치 패키지 | `requirements.lock` 에 적힌 패키지 28개의 wheel. Windows x86-64의 Python 3.11·3.12·3.13용을 함께 넣으면 파일 46개, 270 MB | lock의 sha256, `vendor/BUNDLE_MANIFEST.json` |
 | 모델 | `models/multilingual-e5-small/` 의 `model.onnx`, `tokenizer.json`, `config.json`, `MODEL_CARD.md`, `manifest.json` | manifest의 sha256 |
 | 문서 | 이 문서, `README.md`, `docs/LABELING_GUIDE.md`, 스펙 | - |
 
@@ -35,7 +35,7 @@ python tools/fetch_model.py --dest models/multilingual-e5-small
 고정 revision의 파일을 받고 Hub 메타데이터의 해시와 대조한 뒤 `manifest.json` 을 만든다.
 
 ```bash
-python tools/prepare_offline_bundle.py --platform win_amd64 --python-version 3.11
+python tools/prepare_offline_bundle.py --platform win_amd64 --python-version 3.11 3.12 3.13
 ```
 
 lock에 적힌 wheel을 `vendor/wheels/` 에 받고 `vendor/BUNDLE_MANIFEST.json` 을 만든다. 이 도구는 `pip download` 를 쓰므로 pip이 들어 있는 Python으로 실행한다. `uv venv` 로 만든 환경에는 pip이 없고, `python -m venv` 로 만든 환경에는 있다. 대상이 Windows x86-64 / Python 3.11이 아니면 lock부터 다시 만든다:
@@ -52,7 +52,15 @@ uv pip compile requirements/tokenizers.in --no-deps --python-version 3.11 --pyth
 
 ## 3. 운영 PC에서 할 일 (인터넷 없음)
 
-Windows PowerShell 기준이다. 모든 명령은 프로그램 폴더에서 실행한다. 아래는 폴더를 `D:\patent_finder` 에 둔 예다.
+설치 묶음(zip)을 풀어 나온 `patent_finder` 폴더를 원하는 곳에 두고 `setup.bat` 을 더블클릭한다. 아래는 폴더를 `D:\patent_finder` 에 둔 예다.
+
+| 파일 | 하는 일 |
+|---|---|
+| `setup.bat` | 설치. Python 3.11~3.13(64비트)을 찾아 `.venv` 를 만들고, 묶음의 wheel만으로 설치한 뒤 점검한다. 다시 실행해도 된다 |
+| `mark.bat` | 분석. PPTX·PDF 파일이나 폴더를 이 아이콘 위에 끌어다 놓는다(여러 개 가능). 결과는 `outputs\mark-날짜-시각` 에 생기고, 끝나면 그 폴더가 열린다 |
+| `run.bat` | 검토 화면. 브라우저로 `http://127.0.0.1:8765` 를 연다. 검은 창을 닫으면 끝난다 |
+
+같은 내용을 짧게 적은 안내문이 폴더의 `★먼저읽기_Windows_설치순서.txt` 다. `setup.bat` 이 하는 일을 직접 명령으로 하려면 3.3을 따른다.
 
 ### 3.1 설치 위치
 
@@ -69,9 +77,11 @@ Windows PowerShell 기준이다. 모든 명령은 프로그램 폴더에서 실�
 py -0p
 ```
 
-목록에 3.11이 있고 `-32` 가 붙어 있지 않아야 한다(64비트). `requirements.lock` 과 `vendor/wheels` 는 Python 3.11 · 64비트용이다. 다른 버전이면 2절의 방법으로 lock과 wheel을 그 버전에 맞춰 다시 만든다. 지금 lock에 적힌 버전들은 Python 3.12·3.13용 Windows wheel도 PyPI에 있지만(2026-10-05에 메타데이터로 확인) 그 버전에서는 시험하지 않았다. Python 3.10 이하는 지원하지 않는다.
+3.11, 3.12, 3.13 중 하나가 있고 `-32` 가 붙어 있지 않아야 한다(64비트). 설치 묶음의 `vendor/wheels` 에는 세 버전용 wheel이 함께 들어 있다. `setup.bat` 은 3.11, 3.12, 3.13 순서로 찾아 처음 발견한 것을 쓴다. 특정 버전을 쓰게 하려면 검은 창에서 `set PM_PYTHON=py -3.12` 를 입력한 뒤 `setup.bat` 을 실행한다. Python 3.10 이하와 3.14 이상은 지원하지 않는다.
 
-### 3.3 설치와 점검
+### 3.3 직접 명령으로 설치 (setup.bat을 쓰지 않을 때)
+
+Windows PowerShell 기준이다. 모든 명령은 프로그램 폴더에서 실행한다.
 
 ```powershell
 cd D:\patent_finder
@@ -81,7 +91,7 @@ cd D:\patent_finder
 py -3.11 -m venv .venv
 ```
 
-`py` 가 없으면 `python.exe` 의 전체 경로로 실행한다. 예: `& "C:\Python311\python.exe" -m venv .venv`
+3.12나 3.13을 쓰려면 숫자만 바꾼다. `py` 가 없으면 `python.exe` 의 전체 경로로 실행한다. 예: `& "C:\Python311\python.exe" -m venv .venv`
 
 ```powershell
 .venv\Scripts\python -m pip install --no-index --find-links .\vendor\wheels --require-hashes --no-deps --no-cache-dir -r requirements.lock

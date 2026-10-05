@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import time
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Sequence
 
 from .classifiers.seed import ensure_seed_model
 from .existing_marks import describe_marks, total_marks
@@ -65,13 +65,20 @@ def predict_document(services: Services, run_id: str, document_id: str, model: d
     return len(records)
 
 
-def run_analysis(services: Services, input_path: Path, run_id: str, encoding: str | None = None,
+def run_analysis(services: Services, input_path: Path | Sequence[Path], run_id: str, encoding: str | None = None,
                  progress: Callable[[str], None] | None = None) -> dict[str, Any]:
+    """input_path는 파일이나 디렉터리 하나, 또는 그런 경로의 목록이다."""
     say = progress or (lambda message: None)
     database, config = services.database, services.config
-    files = discover_files(Path(input_path))
+    roots = [Path(input_path)] if isinstance(input_path, (str, Path)) else [Path(item) for item in input_path]
+    files: list[Path] = []
+    for root in roots:
+        for path in discover_files(root):
+            if path not in files:
+                files.append(path)
+    input_label = "; ".join(str(root.resolve()) for root in roots)
     if not files:
-        raise RunError(f"분석할 파일이 없습니다: {input_path}")
+        raise RunError(f"분석할 파일이 없습니다: {input_label}")
 
     existing = database.query_one("SELECT * FROM runs WHERE run_id = ?", (run_id,))
     if existing is not None:
@@ -97,7 +104,7 @@ def run_analysis(services: Services, input_path: Path, run_id: str, encoding: st
                 (run_id, config.config_hash(), code_commit(config.base_dir), environment_manifest_hash(manifest),
                  utc_now(), model["model_version"] if model else None, model["policy_version"] if model else None,
                  model["stage"] if model else None,
-                 json.dumps({"input": str(Path(input_path).resolve()), "python": manifest["python"],
+                 json.dumps({"input": input_label, "python": manifest["python"],
                              "platform": manifest["platform"]}, ensure_ascii=False)),
             )
 
