@@ -2,7 +2,7 @@
 
 운영 PC는 인터넷에서 패키지나 모델을 받지 않는다. 필요한 파일은 인터넷이 허용된 **준비 환경**에서 확보한 뒤 회사 반입 절차로 옮긴다. 운영 코드에는 다운로드 경로가 없다.
 
-> 현재 상태: 아래 절차 중 "운영 PC" 부분은 대상 Windows PC에서 실행해 보지 않았다. 개발 검증은 macOS arm64 / Python 3.11.15에서 같은 패키지 버전으로 했다. Phase 0 환경 조사에서 OS·CPU·Python 버전·설치 권한을 먼저 확정한다.
+> 현재 상태(2026-10-05): 3절의 절차는 GitHub의 Windows 러너(영문 Windows Server, Python 3.11.9)에서 0.1.1 설치 묶음으로 확인했다. 묶음의 wheel만으로 설치되고, 점검·합성 자료 분석·시험 133개가 통과했다(`.github/workflows/windows.yml`). 대상 회사 PC(한국어 Windows 10/11)에서는 아직 실행하지 않았다. 개발은 macOS arm64 / Python 3.11.15에서 같은 패키지 버전으로 했다. Phase 0 환경 조사에서 OS·CPU·Python 버전·설치 권한을 먼저 확정한다.
 
 ## 1. 반입 목록
 
@@ -38,7 +38,7 @@ python tools/fetch_model.py --dest models/multilingual-e5-small
 python tools/prepare_offline_bundle.py --platform win_amd64 --python-version 3.11
 ```
 
-lock에 적힌 wheel을 `vendor/wheels/` 에 받고 `vendor/BUNDLE_MANIFEST.json` 을 만든다. 대상이 Windows x86-64 / Python 3.11이 아니면 lock부터 다시 만든다:
+lock에 적힌 wheel을 `vendor/wheels/` 에 받고 `vendor/BUNDLE_MANIFEST.json` 을 만든다. 이 도구는 `pip download` 를 쓰므로 pip이 들어 있는 Python으로 실행한다. `uv venv` 로 만든 환경에는 pip이 없고, `python -m venv` 로 만든 환경에는 있다. 대상이 Windows x86-64 / Python 3.11이 아니면 lock부터 다시 만든다:
 
 ```bash
 uv pip compile requirements/base.in --python-version 3.11 --python-platform x86_64-pc-windows-msvc --generate-hashes -o base.lock
@@ -87,6 +87,8 @@ py -3.11 -m venv .venv
 .venv\Scripts\python -m pip install --no-index --find-links .\vendor\wheels --require-hashes --no-deps --no-cache-dir -r requirements.lock
 ```
 
+이 명령이 `UnicodeDecodeError` 로 끝나면 `requirements.lock` 에 ASCII가 아닌 문자가 들어 있는 것이다. Python 3.11에 들어 있는 pip은 이 파일을 Windows 시스템 코드 페이지로 읽는다. 0.1.0 묶음이 이 문제로 설치되지 않았고 0.1.1에서 고쳤다.
+
 `--no-cache-dir` 는 pip이 사용자 폴더(보통 C 드라이브)에 캐시를 만들지 않게 한다. C 드라이브에 공간이 거의 없어 설치 중 임시 파일까지 다른 드라이브에 두려면, 위 명령보다 먼저 아래를 실행한다. 설치가 끝나면 `.tmp` 폴더는 지워도 된다.
 
 ```powershell
@@ -116,6 +118,8 @@ onnxruntime은 Windows에서 Visual C++ 재배포 패키지가 필요하다. `im
 프로그램 안의 가드는 Python 소켓 수준이다. 최종 보장은 OS·방화벽 수준 차단이다.
 
 ## 5. 시험 실행 (선택)
+
+GitHub Actions의 `Windows 시험` 워크플로가 3절의 설치와 아래 시험을 Windows 러너에서 실행한다. 릴리스 태그를 넣어 수동으로 실행하면 그 릴리스의 묶음을 받아 확인한다.
 
 pytest와 reportlab을 함께 반입한 경우:
 

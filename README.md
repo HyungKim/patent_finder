@@ -162,18 +162,18 @@ PPT, DOC, HWP, HWPX, 매크로 문서, 암호화 문서, 이미지 파일은 미
 | 설치 패키지 | `requirements.lock` 의 wheel 28개 (Windows x86-64 / Python 3.11 대상, sha256 포함). torch·transformers·huggingface-hub·requests 없음 |
 | 모델 | `intfloat/multilingual-e5-small` revision `614241f6…` 의 `model.onnx` (470MB), `tokenizer.json` (17MB), `config.json`, `MODEL_CARD.md`, `manifest.json`. MIT |
 
-파일별 해시와 절차는 [docs/OFFLINE_INSTALL.md](docs/OFFLINE_INSTALL.md)에 있다.
+파일별 해시와 절차는 [docs/OFFLINE_INSTALL.md](docs/OFFLINE_INSTALL.md)에 있다. 세 가지를 한 파일로 묶은 Windows · Python 3.11용 설치 묶음은 GitHub 릴리스에 있다.
 
 ## 검수 결과
 
-2026-10-05, macOS 26 arm64 (10코어, RAM 24GiB), Python 3.11.15, 합성 자료 기준. `pytest` 130개 통과(단위 99, 통합 31. 그중 6개는 실제 E5 모델 사용).
+2026-10-05, macOS 26 arm64 (10코어, RAM 24GiB), Python 3.11.15, 합성 자료 기준. `pytest` 133개 통과(단위 102, 통합 31. 그중 6개는 실제 E5 모델 사용). 같은 날 GitHub의 Windows 러너(영문 Windows Server, Python 3.11.9)에서도 133개가 통과했다.
 
 ### 스펙 17.1 기능·회귀 시험
 
 | 항목 | 결과 | 근거 |
 |---|---|---|
 | 네트워크 가드를 켠 채 로컬 파일만으로 분석·재학습·export | 통과 | `test_cli_analyze_runs_fully_offline…`: 접속 시도 0건. CLI로 train·evaluate·promote까지 실행 |
-| 반입 wheel만으로 설치 | **미검증** | 대상 Windows PC에서 설치해 보지 않음 |
+| 반입 wheel만으로 설치 | 통과 (Windows 러너) | 0.1.1 묶음을 GitHub의 Windows 러너에 풀어 `--no-index` 로 설치하고 점검·분석·시험까지 실행. 대상 회사 PC에서는 아직 설치해 보지 않음 |
 | 모델 누락 시 즉시 오류, 다운로드 시도 없음 | 통과 | `test_missing_model_fails_without_any_download_attempt`, `test_cli_rejects_missing_model…` |
 | GPU가 있어도 CPU 실행 | 통과 | CoreML provider가 있는 Mac에서 세션 provider가 CPU뿐임을 확인 |
 | 혼용 텍스트·단위·부정문·목록·표·긴 문단·반복 문자열의 위치 보존 | 통과 | `test_text_processing.py`, `test_parsers.py` |
@@ -215,7 +215,7 @@ PPT, DOC, HWP, HWPX, 매크로 문서, 암호화 문서, 이미지 파일은 미
 ## 남은 제한
 
 - seed 분류기와 그 threshold는 실제 문서에서 검증되지 않았다. 놓치는 후보가 있을 수 있다.
-- 대상 Windows PC에서의 설치·실행, 16GB 메모리 조건, 실제 크기 문서는 확인하지 않았다.
+- 대상 회사 PC(한국어 Windows 10/11)에서의 설치·실행은 확인하지 않았다. Windows에서는 GitHub의 러너(영문 Windows Server)에서만 확인했다. 16GB 메모리 조건과 실제 크기 문서도 확인하지 않았다.
 - Laya 2단계(shadow/assist/filter), active learning 큐 배분, OCR, DOCX 사본 마킹은 구현하지 않았다.
 - 작성자가 직접 넣은 형광펜·메모·PDF 주석은 마킹 사본에 남지 않는다(입력 파일에는 그대로 있다). 일반 도형, 잉크, 페이지 내용으로 그려진 색칠은 지우지 못한다.
 - 마킹 사본을 다시 넣으면 원본과 별개의 문서로 저장된다(같은 문서 계열). 원본에 준 판정은 이어지지 않는다.
@@ -249,6 +249,7 @@ src/patent_marker/
 tests/                         단위·통합 시험, 합성 시험 자료
 tools/                         반입 준비 도구 (준비 환경 전용)
 docs/                          라벨 가이드, 오프라인 설치, 스펙 변경 내역
+.github/workflows/windows.yml  Windows 러너에서 설치와 시험 확인
 ```
 
 `models/`, `data/`, `artifacts/`, `outputs/`, `vendor/wheels/` 는 Git에 넣지 않는다. 실제 보고자료, 라벨, DB, 임베딩, 모델 가중치도 넣지 않는다.
