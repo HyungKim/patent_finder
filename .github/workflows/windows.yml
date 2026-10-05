@@ -3,9 +3,11 @@
 #
 # - tests (push·수동): 새 가상환경을 만들어 그 안의 pip(그 Python에 들어 있는 버전 그대로)으로
 #   requirements.lock을 설치하고, 모델을 받아 점검·합성 자료 분석·시험 전체를 실행한다.
-# - release-bundle (수동, 태그를 넣었을 때만): 릴리스에 첨부한 설치 묶음을 받아 풀고
-#   setup.bat · mark.bat · run.bat을 사용자가 하듯이 실행한 뒤(tests/windows_bundle_check.py),
-#   폴더를 옮겨서 다시 확인하고, 묶음 안의 시험 전체를 실행한다.
+# - batch-files (push·수동): 저장소 파일에 설치 패키지와 모델을 채워 설치 묶음과 같은 폴더를 만들고,
+#   setup.bat · mark.bat · run.bat을 사용자가 하듯이 실행한다(tests/windows_bundle_check.py).
+#   폴더를 옮긴 뒤에도 다시 확인한다. 릴리스를 만들기 전에 batch 파일을 확인하는 용도다.
+# - release-bundle (수동, 태그를 넣었을 때만): 릴리스에 첨부한 설치 묶음을 받아 풀고 같은 확인을 한 뒤,
+#   묶음 안의 시험 전체를 실행한다.
 #
 # 러너는 영문 Windows Server다. 한국어 Windows 10/11과는 시스템 로캘이 다르다.
 name: Windows 시험
@@ -73,6 +75,65 @@ jobs:
         run: .venv\Scripts\python -m pip install --disable-pip-version-check --no-cache-dir -r requirements\dev.in
       - name: 시험 전체 (실제 모델 포함)
         run: .venv\Scripts\python -m pytest -ra
+
+  batch-files:
+    name: batch 파일 (Python ${{ matrix.python-version }})
+    runs-on: windows-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    env:
+      # 3.11에서는 지정하지 않아 setup.bat이 스스로 찾게 하고, 나머지는 그 버전을 쓰게 한다.
+      PM_PYTHON: ${{ matrix.python-version != '3.11' && format('py -{0}', matrix.python-version) || '' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+      - name: 환경 확인
+        run: |
+          python -VV
+          "PM_PYTHON=[$env:PM_PYTHON]"
+          py -0p
+      - name: 모델 캐시
+        id: model-cache
+        uses: actions/cache@v6
+        with:
+          path: models/multilingual-e5-small
+          key: e5-small-onnx-${{ hashFiles('tools/fetch_model.py') }}
+      - name: 모델 받기 (준비 환경용 도구)
+        if: steps.model-cache.outputs.cache-hit != 'true'
+        run: python tools\fetch_model.py --dest models\multilingual-e5-small
+      - name: 설치 패키지 받기 (묶음에 넣는 것과 같은 파일, 해시 검증)
+        run: python tools\prepare_offline_bundle.py --python-version ${{ matrix.python-version }}
+      - name: 설치 묶음과 같은 폴더 만들기
+        run: |
+          $root = if (Test-Path 'D:\') { 'D:\pf-check' } else { Join-Path $env:RUNNER_TEMP 'pf-check' }
+          $pf = Join-Path $root 'patent_finder'
+          New-Item -ItemType Directory -Path $pf -Force | Out-Null
+          robocopy . $pf /E /XD .git .venv data artifacts outputs /NFL /NDL /NJH /NJS /NP | Out-Null
+          if ($LASTEXITCODE -ge 8) { throw "robocopy 실패: $LASTEXITCODE" }
+          $global:LASTEXITCODE = 0
+          Get-ChildItem -Force $pf | Select-Object -ExpandProperty Name
+          "PF_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "PF_DIR=$pf" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: setup.bat · mark.bat · run.bat 확인
+        working-directory: ${{ env.PF_DIR }}
+        run: python tests\windows_bundle_check.py --expect ${{ matrix.python-version }}
+      - name: 설치한 폴더를 다른 곳으로 옮기기
+        run: |
+          $moved = Join-Path $env:PF_ROOT 'moved here\patent_finder'
+          New-Item -ItemType Directory -Path (Split-Path $moved) | Out-Null
+          Move-Item -LiteralPath $env:PF_DIR -Destination $moved
+          if (Test-Path -LiteralPath $env:PF_DIR) { throw '옮긴 뒤에도 원래 폴더가 남아 있다' }
+          "옮긴 폴더: $moved"
+          "PF_DIR=$moved" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: 옮긴 뒤 다시 확인 (경로에 공백 포함)
+        working-directory: ${{ env.PF_DIR }}
+        run: python tests\windows_bundle_check.py --expect ${{ matrix.python-version }} --moved
 
   release-bundle:
     name: 설치 묶음 (setup.bat · Python ${{ matrix.python-version }})
