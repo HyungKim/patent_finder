@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pm-token" content="{{PM_TOKEN}}">
+<title>특허 검토 후보 · 검토 화면</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header id="top">
+  <div class="brand">
+    <h1>특허 검토 후보</h1>
+    <span class="sub">로컬 검토 화면 · 이 PC 안에서만 동작</span>
+  </div>
+  <div id="model-badge" class="model"></div>
+  <div id="counts" class="counts"></div>
+</header>
+<div id="notice" class="notice" hidden></div>
+<div class="layout">
+  <aside id="sidebar" aria-label="문서 목록">
+    <h2>문서</h2>
+    <ul id="doc-list"></ul>
+  </aside>
+  <main>
+    <nav class="tabs" role="tablist">
+      <button id="tab-page" role="tab" aria-selected="true">페이지 검토</button>
+      <button id="tab-queue" role="tab" aria-selected="false">검토 큐</button>
+      <span class="keys" id="keys"></span>
+    </nav>
+    <section id="view-page">
+      <div id="doc-head"></div>
+      <div id="unit-strip" class="strip" role="tablist" aria-label="검토 단위"></div>
+      <div id="group"></div>
+    </section>
+    <section id="view-queue" hidden>
+      <div class="queue-controls">
+        <label>보기 <select id="queue-filter"></select></label>
+        <label><input type="checkbox" id="queue-doc-only"> 선택한 문서만</label>
+        <span id="queue-total" class="muted"></span>
+      </div>
+      <div id="queue-list"></div>
+      <div class="pager"><button id="queue-prev">이전</button><button id="queue-next">다음</button></div>
+    </section>
+  </main>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

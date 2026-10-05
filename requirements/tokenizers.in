@@ -1,0 +1,3 @@
+# tokenizers는 huggingface-hub(다운로드 기능)를 의존성으로 선언한다.
+# 운영 환경에는 그 의존성을 넣지 않기 위해 --no-deps로 잠근다. 로컬 tokenizer.json 로드에는 필요 없다.
+tokenizers==0.23.2

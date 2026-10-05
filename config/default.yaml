@@ -1,0 +1,76 @@
+# 오프라인 특허 검토 후보 마킹 시스템 기본 설정
+# - 경로는 paths.base_dir(이 파일의 위치 기준) 아래로 resolve된다. 원격 모델 ID/URL은 거부된다.
+# - 숫자는 스펙 14.2의 시작값이며 사내 데이터로 검증할 제안값이다.
+runtime:
+  device: cpu                # cpu만 허용
+  cpu_threads: 4
+  workers: 1
+  batch_size: 8
+  offline: true              # true면 프로세스 내 네트워크 가드(루프백 외 접속 차단)를 설치
+  process_tree_memory_budget_gib: 8
+paths:
+  base_dir: ..
+  e5: models/multilingual-e5-small
+  database: data/patent_marker.sqlite3
+  data_dir: data
+  artifacts_dir: artifacts
+  outputs_dir: outputs
+parsing:
+  include_speaker_notes: false
+  include_headers_footers: false
+  include_footnotes: false
+  include_hidden_slides: true
+limits:
+  max_file_mb: 200
+  max_units: 2000            # 페이지/슬라이드 수
+  max_uncompressed_mb: 1024  # DOCX/PPTX 압축 해제 용량
+segmentation:
+  max_input_tokens: 512
+  target_tokens: 320
+  context_tokens: 128        # features.mode=composed 에서만 사용
+  overlap_tokens: 48
+  title_tokens: 32
+  short_item_tokens: 64      # 계층 불릿 묶음에 넣을 수 있는 항목 최대 길이
+embedding:
+  prefix: "query: "
+  normalize: true
+  pooling: mean
+features:
+  mode: separate             # separate(대상⊕문맥) | target_only | composed(스펙 5.2 원안)
+classifier:
+  type: logistic_regression
+  C: 1.0
+  class_weight: balanced
+  max_iter: 1000
+  random_seed: 42
+seed:
+  enabled: true              # 합성 seed 분류기(classifier-0000, SEED·미검증)
+  sample_weight: 0.3         # 사람 라벨과 함께 학습할 때 seed 예문의 가중치
+policy:
+  candidate_threshold: null  # threshold는 정책 버전으로만 관리한다. 여기에 숫자를 넣으면 오류
+  status: UNVALIDATED
+  recall_target: 0.95
+  min_validation_positives: 10
+evaluation:
+  split_ratios: [0.6, 0.2, 0.2]
+  bootstrap_samples: 1000
+  cv_folds: 5
+promotion:
+  recall_target: 0.95
+  min_positive_segments: 100
+  min_document_families: 20
+retraining:
+  suggest_after_new_labels: 50
+review:
+  reviewer_id: null          # null이면 OS 사용자명
+  label_guideline_version: "1.0"
+laya:
+  mode: "off"                # Phase 3 전까지 off만 허용
+  local_path: null
+  timeout_seconds: 30
+ui:
+  host: 127.0.0.1
+  port: 8765
+export:
+  formats: [html, jsonl, annotated]
+  pptx_summary_slide: true

@@ -1,0 +1,6 @@
+# 문서 형식 파일은 줄바꿈 변환과 텍스트 diff 대상에서 뺀다.
+# ReportLab이 만든 합성 PDF는 ASCII로만 이루어져 Git이 텍스트로 판정한다. 지정하지 않으면
+# autocrlf가 켜진 Windows에서 내려받을 때 줄바꿈이 바뀌어 파일이 깨진다.
+*.pdf  binary
+*.pptx binary
+*.docx binary

@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "patent-marker"
+version = "0.1.0"
+description = "오프라인 특허 검토 후보 마킹 시스템 (CPU 전용, 외부 API 없음)"
+readme = "README.md"
+requires-python = ">=3.11"
+# tokenizers는 huggingface-hub를 의존성으로 선언하지만 운영 환경에는 설치하지 않는다.
+# 반입 설치는 requirements.lock + `pip install --no-deps`를 사용한다 (docs/OFFLINE_INSTALL.md).
+dependencies = [
+    "numpy>=1.26",
+    "onnxruntime>=1.18",
+    "tokenizers>=0.19",
+    "scikit-learn>=1.4",
+    "python-docx>=1.1",
+    "python-pptx>=1.0",
+    "pdfplumber>=0.11",
+    "pypdf>=4.2",
+    "PyYAML>=6.0",
+    "psutil>=5.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "reportlab>=4"]
+
+[project.scripts]
+patent-marker = "patent_marker.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+patent_marker = ["ui/static/*", "seed_data/*.jsonl", "storage/migrations/*.sql"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests", "tests/fixtures"]
+markers = [
+    "requires_model: 로컬 E5 모델 디렉터리(models/multilingual-e5-small)가 있어야 실행되는 시험",
+]

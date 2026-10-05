@@ -1,0 +1,17 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# 스펙 14.1: 실제 보고자료·DB·임베딩·라벨·로그·모델 가중치·설치 패키지는 Git에 넣지 않는다
+vendor/wheels/
+models/
+data/
+artifacts/
+outputs/
+
+.DS_Store

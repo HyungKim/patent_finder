@@ -1,0 +1,287 @@
+{"id": "seed-yes-000", "label": "YES", "text": "Radar 신호의 SNR이 기준 이하로 떨어지면 해당 프레임의 radar track 가중치를 0.3으로 낮추고 camera 기반 track으로 대체한다."}
+{"id": "seed-yes-001", "label": "YES", "text": "LiDAR 포인트 클라우드를 voxel 단위로 묶은 뒤 voxel별 반사 강도 분산이 큰 영역만 고해상도로 재샘플링함"}
+{"id": "seed-yes-002", "label": "YES", "text": "카메라와 레이더의 검출 결과를 Hungarian matching으로 연관시키되, 매칭 비용에 속도 차이 항을 추가하여 교차 차량의 오연관을 줄임"}
+{"id": "seed-yes-003", "label": "YES", "text": "차선 인식 신뢰도가 0.6 미만인 구간에서는 선행 차량 궤적을 가상 차선으로 사용해 조향 목표를 생성한다."}
+{"id": "seed-yes-004", "label": "YES", "text": "초음파 센서의 에코 폭이 넓어지면 노면 반사로 판단하고 장애물 후보에서 제외하는 필터를 적용"}
+{"id": "seed-yes-005", "label": "YES", "text": "When the tracker loses a target for more than 5 frames, the predicted bounding box is expanded by 20% and re-association is attempted with a relaxed IoU threshold."}
+{"id": "seed-yes-006", "label": "YES", "text": "터널 진입을 조도 센서 변화율로 감지하면 카메라 노출 시간을 미리 2단계 증가시켜 인식 공백을 줄인다."}
+{"id": "seed-yes-007", "label": "YES", "text": "객체 속도 추정 시 radar Doppler 값과 camera optical flow 값을 분산 역수로 가중 평균함"}
+{"id": "seed-yes-008", "label": "YES", "text": "식각 종료 시점을 플라즈마 발광 스펙트럼의 특정 파장 강도 기울기가 음에서 양으로 바뀌는 순간으로 판정한다."}
+{"id": "seed-yes-009", "label": "YES", "text": "웨이퍼 가장자리 영역의 증착 두께 편차를 줄이기 위해 샤워헤드 외곽 구역의 가스 유량을 중심 대비 8% 높게 설정함"}
+{"id": "seed-yes-010", "label": "YES", "text": "CMP 공정에서 패드 온도가 45도를 넘으면 슬러리 유량을 단계적으로 늘리고 헤드 압력을 낮춰 디싱을 억제"}
+{"id": "seed-yes-011", "label": "YES", "text": "노광 전 정렬 마크 인식에 실패하면 인접 다이의 마크 위치로부터 보간한 좌표를 사용해 재시도한다."}
+{"id": "seed-yes-012", "label": "YES", "text": "The anneal temperature is ramped in two stages, holding at 400°C for 30 s to release hydrogen before the final 950°C spike."}
+{"id": "seed-yes-013", "label": "YES", "text": "포토레지스트 도포 후 베이크 온도를 막 두께 측정값에 따라 웨이퍼별로 보정하는 feed-forward 제어를 적용"}
+{"id": "seed-yes-014", "label": "YES", "text": "셀 간 전압 편차가 30 mV를 넘으면 가장 높은 셀부터 수동 밸런싱 저항을 연결하고, 편차가 10 mV 이하가 되면 해제한다."}
+{"id": "seed-yes-015", "label": "YES", "text": "충전 전류를 SOC 구간별로 다르게 설정하고 80% 이상에서는 셀 온도 상승률에 비례해 전류를 줄임"}
+{"id": "seed-yes-016", "label": "YES", "text": "배터리 팩 냉각수 입구 온도와 셀 최고 온도의 차이로 펌프 속도를 결정하는 2차원 맵을 사용"}
+{"id": "seed-yes-017", "label": "YES", "text": "내부 저항 추정값이 초기 대비 1.5배를 넘으면 급속 충전 프로파일을 완속 프로파일로 자동 전환한다."}
+{"id": "seed-yes-018", "label": "YES", "text": "SOH is estimated by fitting the incremental capacity curve peak shift, and the estimate is updated only when the cell temperature is within 20-30°C."}
+{"id": "seed-yes-019", "label": "YES", "text": "열폭주 조기 감지를 위해 셀 표면 온도 상승률과 가스 센서 출력의 곱이 임계값을 넘으면 해당 모듈의 릴레이를 차단"}
+{"id": "seed-yes-020", "label": "YES", "text": "OLED 화소의 열화 정도를 구동 전류 누적값으로 추정하고, 추정값에 따라 화소별 보상 전압을 가산한다."}
+{"id": "seed-yes-021", "label": "YES", "text": "백라이트 로컬 디밍 영역의 밝기를 인접 영역 평균과 비교해 차이가 클 때 경계부에 공간 필터를 적용, halo를 완화"}
+{"id": "seed-yes-022", "label": "YES", "text": "터치 패널의 노이즈가 커지면 구동 주파수를 미리 정한 3개 후보 중 노이즈가 가장 작은 주파수로 hopping"}
+{"id": "seed-yes-023", "label": "YES", "text": "저계조에서 감마 보정 테이블을 패널 온도 구간별로 따로 두고 온도 센서 값으로 선택한다."}
+{"id": "seed-yes-024", "label": "YES", "text": "기지국은 단말의 채널 품질 보고가 연속 3회 누락되면 직전 보고값에 감쇠 계수를 곱해 MCS를 낮춘다."}
+{"id": "seed-yes-025", "label": "YES", "text": "패킷 재전송 횟수가 임계값을 넘는 단말에 대해서만 중복 전송 경로를 추가로 설정하는 방식"}
+{"id": "seed-yes-026", "label": "YES", "text": "빔 탐색 시 이전 최적 빔의 인접 빔부터 우선 측정하고, 수신 전력이 기준 이하일 때만 전체 탐색을 수행"}
+{"id": "seed-yes-027", "label": "YES", "text": "The scheduler assigns resource blocks in descending order of buffer age, and caps each user's share at 40% to prevent starvation."}
+{"id": "seed-yes-028", "label": "YES", "text": "핸드오버 실패를 줄이기 위해 단말 이동 속도가 빠를수록 측정 보고 트리거 시간을 짧게 설정한다."}
+{"id": "seed-yes-029", "label": "YES", "text": "학습 데이터의 클래스 불균형을 줄이기 위해 소수 클래스 샘플에 대해서만 mixup 비율을 0.4로 높여 증강함"}
+{"id": "seed-yes-030", "label": "YES", "text": "추론 지연을 줄이기 위해 입력 해상도를 장면 복잡도 점수에 따라 3단계로 전환하는 동적 스케일링 적용"}
+{"id": "seed-yes-031", "label": "YES", "text": "모델 출력의 entropy가 높은 샘플만 선별해 라벨링 큐에 넣고, 낮은 샘플은 pseudo label로 재학습에 사용한다."}
+{"id": "seed-yes-032", "label": "YES", "text": "캐시 적중률이 70% 아래로 떨어지면 TTL을 절반으로 줄이고 접근 빈도 상위 키만 선반입한다."}
+{"id": "seed-yes-033", "label": "YES", "text": "로그 이상 탐지 시 최근 10분 구간의 토큰 빈도 벡터와 기준 벡터의 코사인 거리가 0.35를 넘으면 경보를 발생시킨다."}
+{"id": "seed-yes-034", "label": "YES", "text": "The encoder output is quantized to 8 bits per channel, and the quantization step is adapted per layer based on the activation range observed during calibration."}
+{"id": "seed-yes-035", "label": "YES", "text": "요청이 몰릴 때는 큐 길이에 비례해 배치 크기를 키우고, 대기 시간이 200 ms를 넘는 요청은 단독으로 즉시 처리"}
+{"id": "seed-yes-036", "label": "YES", "text": "중복 문서 제거를 위해 문단 단위 MinHash 서명을 만들고 Jaccard 유사도 0.8 이상인 문단을 하나로 병합한다."}
+{"id": "seed-yes-037", "label": "YES", "text": "압축기 흡입 압력이 설정값보다 낮으면 팽창 밸브 개도를 5%씩 늘리고, 과열도가 3K 이하로 떨어지면 증가를 멈춘다."}
+{"id": "seed-yes-038", "label": "YES", "text": "방열판 핀 간격을 공기 유입 측은 넓게, 배출 측은 좁게 배치하여 압력 손실 증가 없이 열전달 면적을 확보"}
+{"id": "seed-yes-039", "label": "YES", "text": "베어링 진동의 포락선 스펙트럼에서 결함 주파수 성분이 기준의 2배를 넘으면 윤활 주기를 절반으로 단축"}
+{"id": "seed-yes-040", "label": "YES", "text": "노즐 출구에 경사 15도의 가이드 베인을 추가하여 분사 각도를 넓히고 벽면 충돌을 줄이는 구조"}
+{"id": "seed-yes-041", "label": "YES", "text": "The damper stiffness is switched between two levels depending on whether the measured body acceleration exceeds 0.3 g."}
+{"id": "seed-yes-042", "label": "YES", "text": "전구체 용액의 pH를 9.5로 유지하면서 암모니아수를 분당 2 mL 속도로 적하하여 입자 크기 분포를 좁힘"}
+{"id": "seed-yes-043", "label": "YES", "text": "코팅층 균열을 줄이기 위해 1차 건조를 60도에서 10분, 2차 건조를 120도에서 30분으로 나누어 진행한다."}
+{"id": "seed-yes-044", "label": "YES", "text": "바인더 함량을 3 wt%에서 1.5 wt%로 줄이는 대신 분산제를 0.2 wt% 추가하여 슬러리 점도를 유지"}
+{"id": "seed-yes-045", "label": "YES", "text": "촉매 담지 후 수소 분위기에서 350도로 환원 처리하고, 승온 속도는 분당 5도로 제한한다."}
+{"id": "seed-yes-046", "label": "YES", "text": "로봇 팔 말단의 힘 센서 값이 5 N을 넘으면 위치 제어에서 임피던스 제어로 전환하고 강성 계수를 30% 낮춘다."}
+{"id": "seed-yes-047", "label": "YES", "text": "경로 계획 시 장애물까지 거리가 가까울수록 속도 상한을 선형으로 낮추는 속도 프로파일을 생성"}
+{"id": "seed-yes-048", "label": "YES", "text": "모터 전류 리플을 줄이기 위해 PWM 캐리어 주파수를 속도 구간별로 바꾸고 전환 시 위상을 동기화함"}
+{"id": "seed-yes-049", "label": "YES", "text": "The PID gains are scheduled by the estimated payload mass, which is identified from the motor current during the first 200 ms of motion."}
+{"id": "seed-yes-050", "label": "YES", "text": "그리퍼 접촉 여부를 모터 전류 변화율로 판단하고, 접촉 후에는 파지력이 목표값의 90%에 도달할 때까지 속도를 줄여 닫는다."}
+{"id": "seed-yes-051", "label": "YES", "text": "검사 영상에서 결함 후보의 면적이 20픽셀 미만이면 인접 프레임 3장의 동일 위치를 평균해 재판정한다."}
+{"id": "seed-yes-052", "label": "YES", "text": "용접 비드 폭을 라인 레이저 프로파일로 측정하고 기준 대비 편차가 0.2 mm를 넘으면 용접 전류를 보정"}
+{"id": "seed-yes-053", "label": "YES", "text": "조명 밝기 편차를 보정하기 위해 기준 백색판 영상으로 화소별 gain 맵을 만들어 입력 영상에 곱한다."}
+{"id": "seed-yes-054", "label": "YES", "text": "불량 유형별로 임계값을 따로 두고, 스크래치는 방향성 필터 응답으로, 이물은 국부 대비로 판정하는 2단 분류 구조"}
+{"id": "seed-yes-055", "label": "YES", "text": "인버터 데드타임 보상량을 상전류 극성과 크기에 따라 3구간으로 나누어 적용한다."}
+{"id": "seed-yes-056", "label": "YES", "text": "과전류 검출 시 게이트 전압을 2단계로 낮추는 soft turn-off 회로를 구성하여 서지 전압을 억제"}
+{"id": "seed-yes-057", "label": "YES", "text": "모터 회전자 위치 추정 오차가 커지는 저속 구간에서는 고주파 전압 주입 방식으로 전환한다."}
+{"id": "seed-yes-058", "label": "YES", "text": "DC 링크 전압 리플이 5%를 넘으면 스위칭 주파수를 높이고 전류 지령의 변화율을 제한함"}
+{"id": "seed-yes-059", "label": "YES", "text": "처리 방식: 입력 영상을 8x8 패치로 나누고 패치별 분산이 임계값 이하인 영역은 압축률을 2배로 높임 | 비고: 신규"}
+{"id": "seed-yes-060", "label": "YES", "text": "제어 조건: 유량 편차 5% 초과 시 밸브 개도를 편차에 비례해 보정 | 적용 대상: 2호 라인"}
+{"id": "seed-yes-061", "label": "YES", "text": "모듈: 전처리 | 알고리즘: 프레임 간 차분의 히스토그램으로 장면 전환을 검출한 뒤 전환 직후 3프레임은 추적을 초기화"}
+{"id": "seed-yes-062", "label": "YES", "text": "항목: 충전 프로파일 | 내용: 셀 온도 40도 이상에서 전류를 0.5C로 제한하고 35도 이하로 내려가면 1C로 복귀"}
+{"id": "seed-yes-063", "label": "YES", "text": "냉각 채널을 모듈 하부가 아닌 셀 사이에 배치하고, 채널 폭을 입구에서 출구로 갈수록 좁혀 유속을 균일하게 한 구조"}
+{"id": "seed-yes-064", "label": "YES", "text": "센서 보드와 연산 보드 사이를 차동 신호선으로 연결하고 커넥터 양단에 공통 모드 초크를 배치한 구성"}
+{"id": "seed-yes-065", "label": "YES", "text": "인코더의 마지막 두 층 출력을 연결(concatenate)한 뒤 1x1 convolution으로 채널 수를 줄여 디코더에 전달하는 구조"}
+{"id": "seed-yes-066", "label": "YES", "text": "히트파이프 증발부를 발열 소자 바로 위에 두고 응축부를 팬 유입구 쪽으로 30도 기울여 배치"}
+{"id": "seed-yes-067", "label": "YES", "text": "먼저 저해상도 영상에서 후보 영역을 찾고, 후보 영역만 원본 해상도로 잘라 2차 분류기에 입력한다."}
+{"id": "seed-yes-068", "label": "YES", "text": "데이터 수신 → 타임스탬프 정렬 → 센서별 지연 보상 → 융합 순으로 처리하며, 지연 보상값은 센서별 최근 100개 샘플의 평균 지연으로 갱신"}
+{"id": "seed-yes-069", "label": "YES", "text": "초기화 단계에서 기준 전압을 10회 측정해 평균값을 오프셋으로 저장하고 이후 측정값에서 차감한다."}
+{"id": "seed-yes-070", "label": "YES", "text": "신뢰도 0.3 미만 구간에서 보조 센서 weight를 2배로 적용"}
+{"id": "seed-yes-071", "label": "YES", "text": "임계값은 최근 50프레임 이동 평균으로 갱신"}
+{"id": "seed-yes-072", "label": "YES", "text": "온도 60도 초과 시 팬 듀티 100%로 고정, 55도 이하에서 해제"}
+{"id": "seed-yes-073", "label": "YES", "text": "불량 후보는 2차 고배율 촬영 후 CNN으로 재분류"}
+{"id": "seed-yes-074", "label": "YES", "text": "오프셋 보정값을 EEPROM에 저장하고 부팅 시 로드"}
+{"id": "seed-yes-075", "label": "YES", "text": "저속 구간은 고주파 주입, 고속 구간은 역기전력 기반 추정으로 전환"}
+{"id": "seed-yes-076", "label": "YES", "text": "패킷 손실률 2% 초과 시 FEC 비율을 1/4에서 1/2로 상향"}
+{"id": "seed-yes-077", "label": "YES", "text": "IoU 0.3 미만 track은 3프레임 유지 후 삭제"}
+{"id": "seed-yes-078", "label": "YES", "text": "가스 유량을 단계별로 10 sccm씩 증가시키며 압력 안정화 후 다음 단계 진행"}
+{"id": "seed-yes-079", "label": "YES", "text": "key frame 간격을 움직임 벡터 크기에 따라 가변 설정"}
+{"id": "seed-yes-080", "label": "YES", "text": "Switch to the backup sensor if the primary variance exceeds 2x baseline for 10 consecutive samples"}
+{"id": "seed-yes-081", "label": "YES", "text": "Apply a median filter (window 5) before peak detection to suppress spike noise"}
+{"id": "seed-yes-082", "label": "YES", "text": "Gain is reduced by half when saturation is detected in more than 1% of pixels"}
+{"id": "seed-yes-083", "label": "YES", "text": "Retry with exponential backoff, capped at 30 s, and fall back to the cached result after 3 failures"}
+{"id": "seed-yes-084", "label": "YES", "text": "제안 방식은 attention map에서 값이 큰 상위 20% 토큰만 남기고 나머지는 평균 pooling으로 합쳐 연산량을 줄인다."}
+{"id": "seed-yes-085", "label": "YES", "text": "실시간성 확보를 위해 추적 단계는 매 프레임 수행하고 검출 단계는 3프레임마다 수행하되, 추적 신뢰도가 낮아지면 즉시 검출을 호출한다."}
+{"id": "seed-yes-086", "label": "YES", "text": "두 카메라의 노출 시점 차이를 IMU 각속도로 보상하여 스테레오 정합 오차를 줄이는 방법을 적용하였다."}
+{"id": "seed-yes-087", "label": "YES", "text": "음성 구간 검출 결과가 불안정할 때는 직전 500 ms의 에너지 평균을 기준으로 임계값을 다시 계산한다."}
+{"id": "seed-yes-088", "label": "YES", "text": "메모리 사용량이 한도에 가까워지면 오래된 세션부터 디스크로 내리고, 접근 시 지연 로딩한다."}
+{"id": "seed-yes-089", "label": "YES", "text": "밸브 응답 지연을 보상하기 위해 목표 유량 변화율에 비례하는 선행 보상항을 제어 입력에 더한다."}
+{"id": "seed-yes-090", "label": "YES", "text": "측정값이 연속 3회 범위를 벗어나면 센서 고장으로 판단하고 인접 센서 2개의 평균값으로 대체한다."}
+{"id": "seed-yes-091", "label": "YES", "text": "압연 롤 간격을 판 두께 측정값과 목표값의 차이에 따라 0.01 mm 단위로 조정하고, 조정 주기는 판 속도에 반비례하게 둔다."}
+{"id": "seed-yes-092", "label": "YES", "text": "사출 금형의 게이트 위치를 두께가 두꺼운 쪽으로 옮기고 보압 시간을 2초 늘려 수축 불량을 줄였다."}
+{"id": "seed-yes-093", "label": "YES", "text": "필름 장력을 권취 지름에 따라 테이퍼 방식으로 줄이며, 테이퍼율은 지름 200 mm 이후 30%로 설정"}
+{"id": "seed-yes-094", "label": "YES", "text": "초점 위치를 대비값이 최대가 되는 지점으로 찾되, 탐색 범위를 직전 초점 위치 ±50 µm로 제한하여 시간을 줄인다."}
+{"id": "seed-yes-095", "label": "YES", "text": "암호화 키를 세션마다 새로 파생하고, 파생 입력에 기기 고유값과 카운터를 함께 넣어 재사용을 막는다."}
+{"id": "seed-yes-096", "label": "YES", "text": "수신 신호의 위상 잡음을 파일럿 심볼 간 위상 차이의 이동 평균으로 추정하여 데이터 심볼에서 제거함"}
+{"id": "seed-yes-097", "label": "YES", "text": "추천 후보를 1차로 임베딩 유사도 상위 200개로 줄이고, 2차로 사용자 최근 행동 가중치를 반영해 재정렬한다."}
+{"id": "seed-yes-098", "label": "YES", "text": "로봇 주행 중 바퀴 슬립이 감지되면 엔코더 기반 위치 추정의 가중치를 줄이고 LiDAR 정합 결과의 가중치를 높인다."}
+{"id": "seed-yes-099", "label": "YES", "text": "전극 건조로의 구역별 온도를 용매 잔류량 예측값에 따라 조절하고, 예측에는 코팅 두께와 라인 속도를 입력으로 쓴다."}
+{"id": "seed-yes-100", "label": "YES", "text": "The pump speed is determined by a lookup table indexed by inlet temperature and flow demand, with linear interpolation between grid points."}
+{"id": "seed-yes-101", "label": "YES", "text": "A two-stage classifier is used: a lightweight model filters out easy negatives, and only the remaining samples are passed to the heavier model."}
+{"id": "seed-yes-102", "label": "YES", "text": "To reduce latency, the feature extractor runs on every frame while the transformer head is invoked only when the scene change score exceeds 0.25."}
+{"id": "seed-yes-103", "label": "YES", "text": "The controller limits the rate of change of the torque command to 50 Nm/s whenever wheel slip is detected."}
+{"id": "seed-yes-104", "label": "YES", "text": "Each sensor reading is timestamped at the interrupt and the fusion filter compensates the delay by propagating the state backward."}
+{"id": "seed-yes-105", "label": "YES", "text": "혈압 측정 시 커프 압력을 맥파 진폭이 최대가 되는 지점까지 올린 뒤 초당 3 mmHg로 감압하며 진폭 비율로 수축기·이완기 압력을 산출한다."}
+{"id": "seed-yes-106", "label": "YES", "text": "초음파 영상의 스페클을 줄이기 위해 서로 다른 각도 5개의 프레임을 합성하고, 조직 경계에서는 합성 가중치를 낮춘다."}
+{"id": "seed-yes-107", "label": "YES", "text": "인슐린 주입량을 최근 30분 혈당 변화율과 잔존 인슐린 추정량으로 계산하고, 저혈당 예측 시 주입을 일시 중지"}
+{"id": "seed-yes-108", "label": "YES", "text": "실내 CO2 농도가 800 ppm을 넘으면 외기 댐퍼 개도를 농도에 비례해 열고, 600 ppm 이하에서 최소 개도로 복귀한다."}
+{"id": "seed-yes-109", "label": "YES", "text": "잉크 토출량 편차를 보정하기 위해 노즐별 구동 파형의 전압을 측정된 액적 속도에 맞춰 개별 조정"}
+{"id": "seed-yes-110", "label": "YES", "text": "에코 제거 필터의 적응 속도를 근단 음성 검출 여부에 따라 전환하여 동시 통화 시 발산을 방지한다."}
+{"id": "seed-yes-111", "label": "YES", "text": "비정상 로그인 탐지를 위해 접속 위치·시간대·기기 지문을 점수화하고 합산 점수가 70점을 넘으면 추가 인증을 요구"}
+{"id": "seed-yes-112", "label": "YES", "text": "영상 압축 시 관심 영역의 양자화 파라미터를 4 낮추고 배경은 6 높여 동일 비트율에서 주관 화질을 개선"}
+{"id": "seed-yes-113", "label": "YES", "text": "엘리베이터 호출 배정 시 각 카의 예상 도착 시간과 탑승 인원을 비용으로 계산해 최소 비용 카를 선택한다."}
+{"id": "seed-yes-114", "label": "YES", "text": "드론 착륙 시 하방 카메라의 마커 인식이 끊기면 마지막 인식 위치와 IMU 적분값으로 2초간 위치를 유지한다."}
+{"id": "seed-yes-115", "label": "YES", "text": "태양광 인버터의 MPPT 스텝 크기를 일사량 변화율이 클 때는 크게, 정상 상태에서는 작게 가변한다."}
+{"id": "seed-yes-116", "label": "YES", "text": "세탁기 탈수 시 진동 센서 값이 기준을 넘으면 회전을 멈추고 저속 정역 회전으로 세탁물을 재분산한 뒤 다시 가속"}
+{"id": "seed-yes-117", "label": "YES", "text": "3D 프린터 노즐 온도를 적층 높이와 냉각 팬 풍량에 따라 층별로 보정하여 층간 접착 강도를 유지"}
+{"id": "seed-yes-118", "label": "YES", "text": "문서 분류 시 제목과 본문을 따로 임베딩한 뒤 두 벡터를 연결하여 선형 분류기에 입력하는 구성"}
+{"id": "seed-yes-119", "label": "YES", "text": "스피커 진동판의 변위를 전류와 전압으로 추정하고 추정 변위가 한계의 90%를 넘으면 저역 이득을 줄인다."}
+{"id": "seed-yes-120", "label": "YES", "text": "알고리즘: 2단계 threshold (high 0.7 / low 0.4) 히스테리시스 적용"}
+{"id": "seed-yes-121", "label": "YES", "text": "구성: MCU와 센서 간 SPI 연결, 10 kHz 샘플링, 4-tap 이동 평균 후 전송"}
+{"id": "seed-yes-122", "label": "YES", "text": "조건: 유량 2 L/min 미만이 5초 지속되면 펌프 재기동 시퀀스 진입"}
+{"id": "seed-yes-123", "label": "YES", "text": "방법: 기준 패턴과 입력 패턴의 정규화 상관계수가 0.9 미만이면 재정렬 수행"}
+{"id": "seed-yes-124", "label": "YES", "text": "weight = 1 / (1 + exp(-(conf - 0.5) * 10)) 형태의 sigmoid로 융합 가중치 산출"}
+{"id": "seed-yes-125", "label": "YES", "text": "보정식: 두께 보정량 = k × (측정 온도 − 기준 온도), k는 소재별 테이블에서 선택"}
+{"id": "seed-yes-126", "label": "YES", "text": "Step 1에서 coarse grid 탐색, Step 2에서 최적점 주변 ±2 격자만 fine 탐색"}
+{"id": "seed-yes-127", "label": "YES", "text": "버퍼 점유율 80% 이상이면 비트율을 한 단계 낮추고 30% 이하이면 한 단계 높임"}
+{"id": "seed-yes-128", "label": "YES", "text": "마스크 정렬 오차를 4개 모서리 마크의 편차로 계산하고 회전·배율 성분으로 분해하여 스테이지를 보정"}
+{"id": "seed-yes-129", "label": "YES", "text": "급제동 판단 시 전방 차량의 감속도 추정값과 상대 거리로 TTC를 계산하고 TTC 1.2초 미만에서 제동 압력을 선충전"}
+{"id": "seed-no-000", "label": "NO", "text": "다음 반기에 인식 성능 개선 활동을 추진한다."}
+{"id": "seed-no-001", "label": "NO", "text": "4분기에는 통합 평가를 진행하고 최종 보고를 준비한다."}
+{"id": "seed-no-002", "label": "NO", "text": "10월 2주차에 시제품 입고 후 3주차부터 평가 시작"}
+{"id": "seed-no-003", "label": "NO", "text": "과제 종료일은 12월 20일이며 최종 보고서는 12월 초에 제출한다."}
+{"id": "seed-no-004", "label": "NO", "text": "1차 샘플 제작 일정이 2주 지연되어 전체 일정을 재조정함"}
+{"id": "seed-no-005", "label": "NO", "text": "일정: 설계 검토(9월) → 시작품 제작(10월) → 신뢰성 평가(11월)"}
+{"id": "seed-no-006", "label": "NO", "text": "차주 계획: 평가 보드 입고 확인 및 시험 환경 구축"}
+{"id": "seed-no-007", "label": "NO", "text": "The next milestone review is scheduled for mid-November."}
+{"id": "seed-no-008", "label": "NO", "text": "Phase 2 kickoff is planned after the budget approval in Q1."}
+{"id": "seed-no-009", "label": "NO", "text": "금주 실적: 시험 3건 완료, 2건 진행 중"}
+{"id": "seed-no-010", "label": "NO", "text": "예산 집행률은 65%이며 잔여 예산은 내년으로 이월한다."}
+{"id": "seed-no-011", "label": "NO", "text": "인력 2명 충원 요청 (SW 1명, 평가 1명)"}
+{"id": "seed-no-012", "label": "NO", "text": "장비 구매 품의는 구매팀 검토 중이며 이달 말 발주 예정"}
+{"id": "seed-no-013", "label": "NO", "text": "출장 보고: 협력사 방문하여 양산 일정 협의"}
+{"id": "seed-no-014", "label": "NO", "text": "주간 회의는 매주 금요일 오후 2시에 진행한다."}
+{"id": "seed-no-015", "label": "NO", "text": "회의록은 공유 폴더에 업로드하였으며 다음 회의는 2주 후에 연다."}
+{"id": "seed-no-016", "label": "NO", "text": "교육 이수 현황: 보안 교육 100%, 안전 교육 85%"}
+{"id": "seed-no-017", "label": "NO", "text": "담당: 설계 파트 책임 1명, 평가 파트 선임 1명"}
+{"id": "seed-no-018", "label": "NO", "text": "과제비 중 외주 용역비 비중이 40%로 계획 대비 5%p 초과"}
+{"id": "seed-no-019", "label": "NO", "text": "The team will hire two contractors to support the validation campaign."}
+{"id": "seed-no-020", "label": "NO", "text": "보고서 양식은 지난 분기와 동일하게 유지한다."}
+{"id": "seed-no-021", "label": "NO", "text": "자료 배포 범위: 사내 한정, 외부 반출 금지"}
+{"id": "seed-no-022", "label": "NO", "text": "문의 사항은 과제 담당자에게 연락 바랍니다."}
+{"id": "seed-no-023", "label": "NO", "text": "품질 회의 결과 고객사 요청 사항 3건을 접수하였다."}
+{"id": "seed-no-024", "label": "NO", "text": "출원 여부는 다음 달 지식재산팀과 협의하여 결정한다."}
+{"id": "seed-no-025", "label": "NO", "text": "야간 인식 성능을 경쟁사 수준 이상으로 확보하는 것이 목표이다."}
+{"id": "seed-no-026", "label": "NO", "text": "목표: 연내 원가 10% 절감"}
+{"id": "seed-no-027", "label": "NO", "text": "사용자 경험을 개선하여 고객 만족도를 높인다."}
+{"id": "seed-no-028", "label": "NO", "text": "차세대 제품에서는 전력 효율을 대폭 향상시킬 계획이다."}
+{"id": "seed-no-029", "label": "NO", "text": "신뢰성 확보를 위한 방안을 지속적으로 검토하겠다."}
+{"id": "seed-no-030", "label": "NO", "text": "세계 최고 수준의 검출 정확도 달성을 추진"}
+{"id": "seed-no-031", "label": "NO", "text": "We aim to significantly improve robustness in adverse weather."}
+{"id": "seed-no-032", "label": "NO", "text": "The goal for next year is to reduce power consumption and cost."}
+{"id": "seed-no-033", "label": "NO", "text": "성능 최적화를 통해 처리 속도를 향상시킬 예정"}
+{"id": "seed-no-034", "label": "NO", "text": "품질 경쟁력 강화를 위해 전사적 노력이 필요하다."}
+{"id": "seed-no-035", "label": "NO", "text": "알고리즘 고도화 추진 (방법 미정)"}
+{"id": "seed-no-036", "label": "NO", "text": "향후 딥러닝 기반 방식 도입을 검토한다."}
+{"id": "seed-no-037", "label": "NO", "text": "주간 평가에서 미검출이 기존 대비 8% 감소"}
+{"id": "seed-no-038", "label": "NO", "text": "검출 정확도 95.2% 달성 (목표 95%)"}
+{"id": "seed-no-039", "label": "NO", "text": "처리 속도가 이전 버전보다 1.8배 빨라졌다."}
+{"id": "seed-no-040", "label": "NO", "text": "불량률이 3.1%에서 1.4%로 개선됨"}
+{"id": "seed-no-041", "label": "NO", "text": "신규 알고리즘 적용 결과 성능 목표를 만족하였다."}
+{"id": "seed-no-042", "label": "NO", "text": "시험 결과 모든 항목 합격"}
+{"id": "seed-no-043", "label": "NO", "text": "고객 평가에서 긍정적인 반응을 얻었다."}
+{"id": "seed-no-044", "label": "NO", "text": "The new version achieved a 15% reduction in latency."}
+{"id": "seed-no-045", "label": "NO", "text": "Accuracy improved from 91% to 94% on the validation set."}
+{"id": "seed-no-046", "label": "NO", "text": "수율 2%p 상승, 원가 절감 효과 연 3억 원 예상"}
+{"id": "seed-no-047", "label": "NO", "text": "내구 시험 1,000시간 통과"}
+{"id": "seed-no-048", "label": "NO", "text": "소비 전력 12 W로 목표(15 W) 대비 여유 확보"}
+{"id": "seed-no-049", "label": "NO", "text": "벤치마크 점수 기준 경쟁 제품 대비 우위"}
+{"id": "seed-no-050", "label": "NO", "text": "전기차 시장은 매년 20% 이상 성장하고 있다."}
+{"id": "seed-no-051", "label": "NO", "text": "최근 자율주행 분야에서 센서 융합의 중요성이 커지고 있다."}
+{"id": "seed-no-052", "label": "NO", "text": "경쟁사는 올해 상반기에 신제품을 출시하였다."}
+{"id": "seed-no-053", "label": "NO", "text": "고객사는 원가 절감과 납기 단축을 요구하고 있다."}
+{"id": "seed-no-054", "label": "NO", "text": "규제 강화로 인해 안전 기능에 대한 요구가 높아지는 추세이다."}
+{"id": "seed-no-055", "label": "NO", "text": "AI 반도체 수요 증가로 관련 투자가 확대되고 있음"}
+{"id": "seed-no-056", "label": "NO", "text": "Market demand for low-power devices continues to grow."}
+{"id": "seed-no-057", "label": "NO", "text": "본 과제는 2024년에 시작하여 3년간 수행한다."}
+{"id": "seed-no-058", "label": "NO", "text": "본 문서는 3분기 진행 현황을 요약한 것이다."}
+{"id": "seed-no-059", "label": "NO", "text": "추진 일정 및 예산"}
+{"id": "seed-no-060", "label": "NO", "text": "향후 계획"}
+{"id": "seed-no-061", "label": "NO", "text": "목차"}
+{"id": "seed-no-062", "label": "NO", "text": "감사합니다"}
+{"id": "seed-no-063", "label": "NO", "text": "Q&A"}
+{"id": "seed-no-064", "label": "NO", "text": "모듈 | 처리 방식 | 비고"}
+{"id": "seed-no-065", "label": "NO", "text": "항목 | 조건 | 비고"}
+{"id": "seed-no-066", "label": "NO", "text": "그림 3. 시스템 구성도"}
+{"id": "seed-no-067", "label": "NO", "text": "표 2. 시험 결과 요약"}
+{"id": "seed-no-068", "label": "NO", "text": "참고 문헌"}
+{"id": "seed-no-069", "label": "NO", "text": "3분기 진행 보고"}
+{"id": "seed-no-070", "label": "NO", "text": "별첨 1. 시험 성적서"}
+{"id": "seed-no-071", "label": "NO", "text": "Appendix A. Test conditions"}
+{"id": "seed-no-072", "label": "NO", "text": "1. 개요"}
+{"id": "seed-no-073", "label": "NO", "text": "대외비 / Confidential"}
+{"id": "seed-no-074", "label": "NO", "text": "작성자: 연구기획팀"}
+{"id": "seed-no-075", "label": "NO", "text": "Overview"}
+{"id": "seed-no-076", "label": "NO", "text": "Agenda"}
+{"id": "seed-no-077", "label": "NO", "text": "Contents"}
+{"id": "seed-no-078", "label": "NO", "text": "요약"}
+{"id": "seed-no-079", "label": "NO", "text": "추적 모듈: 기존 필터 유지 | 비고: 변경 없음"}
+{"id": "seed-no-080", "label": "NO", "text": "통신 프로토콜은 기존 사양을 그대로 사용한다."}
+{"id": "seed-no-081", "label": "NO", "text": "하드웨어 구성은 전년도 모델과 동일하다."}
+{"id": "seed-no-082", "label": "NO", "text": "일정: 12월 1주차 통합 | 비고: 없음"}
+{"id": "seed-no-083", "label": "NO", "text": "회의: 매주 월요일 주간 회의 | 비고: 없음"}
+{"id": "seed-no-084", "label": "NO", "text": "시험 장비는 기존 보유 장비를 활용한다."}
+{"id": "seed-no-085", "label": "NO", "text": "부품 수급 지연으로 일정 리스크가 있음"}
+{"id": "seed-no-086", "label": "NO", "text": "협력사 품질 이슈로 재작업 발생"}
+{"id": "seed-no-087", "label": "NO", "text": "시험 환경 구축이 늦어져 평가 착수가 지연되고 있다."}
+{"id": "seed-no-088", "label": "NO", "text": "원인 분석 중이며 다음 보고 때 대책을 공유하겠다."}
+{"id": "seed-no-089", "label": "NO", "text": "Root cause is under investigation."}
+{"id": "seed-no-090", "label": "NO", "text": "현재 재현이 되지 않아 추가 데이터를 수집 중이다."}
+{"id": "seed-no-091", "label": "NO", "text": "설계팀과 평가팀이 공동으로 검토하기로 하였다."}
+{"id": "seed-no-092", "label": "NO", "text": "대학 연구실과 공동 연구 협약을 체결하였다."}
+{"id": "seed-no-093", "label": "NO", "text": "외부 자문위원 2인을 위촉하여 분기별로 검토를 받는다."}
+{"id": "seed-no-094", "label": "NO", "text": "고객사와 월 1회 정례 미팅을 진행 중"}
+{"id": "seed-no-095", "label": "NO", "text": "시험 장소: 3공장 신뢰성 시험실"}
+{"id": "seed-no-096", "label": "NO", "text": "시험 기간: 9월 1일 ~ 9월 30일"}
+{"id": "seed-no-097", "label": "NO", "text": "평가 차량 2대, 평가 인원 4명 투입"}
+{"id": "seed-no-098", "label": "NO", "text": "데이터 수집량: 주간 120시간, 야간 80시간"}
+{"id": "seed-no-099", "label": "NO", "text": "성능과 비용의 균형을 고려하여 최적 방안을 선정할 예정이다."}
+{"id": "seed-no-100", "label": "NO", "text": "다양한 조건에서 추가 검증이 필요하다."}
+{"id": "seed-no-101", "label": "NO", "text": "본 기술은 여러 제품군에 확대 적용할 수 있을 것으로 기대된다."}
+{"id": "seed-no-102", "label": "NO", "text": "사용자 요구 사항을 반영하여 기능을 보완하겠다."}
+{"id": "seed-no-103", "label": "NO", "text": "안정성 검증 후 양산 적용 여부를 결정한다."}
+{"id": "seed-no-104", "label": "NO", "text": "이번 분기에는 주요 기능 개발을 완료하였다."}
+{"id": "seed-no-105", "label": "NO", "text": "개발 환경을 최신 버전으로 업데이트하였다."}
+{"id": "seed-no-106", "label": "NO", "text": "테스트 커버리지를 높이기 위한 활동을 진행하고 있다."}
+{"id": "seed-no-107", "label": "NO", "text": "코드 리뷰를 통해 품질을 관리하고 있다."}
+{"id": "seed-no-108", "label": "NO", "text": "문서화를 강화할 필요가 있다."}
+{"id": "seed-no-109", "label": "NO", "text": "Further testing is required under various conditions."}
+{"id": "seed-no-110", "label": "NO", "text": "The results will be shared at the next steering committee."}
+{"id": "seed-no-111", "label": "NO", "text": "We completed the main feature development this quarter."}
+{"id": "seed-no-112", "label": "NO", "text": "Documentation and training materials will be updated accordingly."}
+{"id": "seed-no-113", "label": "NO", "text": "데이터 추가 수집 완료"}
+{"id": "seed-no-114", "label": "NO", "text": "평가 진행 중"}
+{"id": "seed-no-115", "label": "NO", "text": "일정 준수"}
+{"id": "seed-no-116", "label": "NO", "text": "이슈 없음"}
+{"id": "seed-no-117", "label": "NO", "text": "비용 검토 필요"}
+{"id": "seed-no-118", "label": "NO", "text": "고객 승인 대기"}
+{"id": "seed-no-119", "label": "NO", "text": "차주 보고 예정"}
+{"id": "seed-no-120", "label": "NO", "text": "담당자 지정 완료"}
+{"id": "seed-no-121", "label": "NO", "text": "변경 없음"}
+{"id": "seed-no-122", "label": "NO", "text": "신규"}
+{"id": "seed-no-123", "label": "NO", "text": "TBD"}
+{"id": "seed-no-124", "label": "NO", "text": "해당 없음"}
+{"id": "seed-no-125", "label": "NO", "text": "완료"}
+{"id": "seed-no-126", "label": "NO", "text": "진행률 80%"}
+{"id": "seed-no-127", "label": "NO", "text": "예산 확보 필요"}
+{"id": "seed-no-128", "label": "NO", "text": "2분기: 고속도로 주행 데이터 수집 완료"}
+{"id": "seed-no-129", "label": "NO", "text": "항목: 일정 | 내용: 2월 금형 수정 | 비고: 없음"}
+{"id": "seed-no-130", "label": "NO", "text": "구분: 인력 | 계획: 5명 | 실적: 4명"}
+{"id": "seed-no-131", "label": "NO", "text": "분기: 3Q | 매출: 120억 | 영업이익: 8억"}
+{"id": "seed-no-132", "label": "NO", "text": "모델명: A-200 | 출시: 2025년 | 상태: 양산"}
+{"id": "seed-no-133", "label": "NO", "text": "버전: v1.2 | 배포일: 9월 15일 | 담당: 플랫폼팀"}
+{"id": "seed-no-134", "label": "NO", "text": "시험 항목: 고온 동작 | 결과: 합격 | 비고: 재시험 불필요"}
+{"id": "seed-no-135", "label": "NO", "text": "지표: 정확도 | 목표: 95% | 실적: 95.2%"}
+{"id": "seed-no-136", "label": "NO", "text": "자세한 내용은 별첨 자료를 참고하기 바란다."}
+{"id": "seed-no-137", "label": "NO", "text": "이상으로 보고를 마치겠습니다."}
+{"id": "seed-no-138", "label": "NO", "text": "질문이 있으시면 말씀해 주십시오."}
+{"id": "seed-no-139", "label": "NO", "text": "본 자료의 수치는 잠정치이며 변경될 수 있다."}
+{"id": "seed-no-140", "label": "NO", "text": "작성일: 2025년 9월 30일"}
+{"id": "seed-no-141", "label": "NO", "text": "경쟁사 제품 3종을 구매하여 벤치마킹할 예정이다."}
+{"id": "seed-no-142", "label": "NO", "text": "관련 표준 문서를 조사하였다."}
+{"id": "seed-no-143", "label": "NO", "text": "선행 기술 조사를 외부 기관에 의뢰하였다."}
+{"id": "seed-no-144", "label": "NO", "text": "논문 2편을 국제 학회에 투고하였다."}
+{"id": "seed-no-145", "label": "NO", "text": "양산 라인 적용은 내년 상반기로 계획하고 있다."}
+{"id": "seed-no-146", "label": "NO", "text": "공급사 변경에 따른 재인증 절차를 진행한다."}
+{"id": "seed-no-147", "label": "NO", "text": "안전 규격 인증을 12월까지 취득할 계획이다."}
+{"id": "seed-no-148", "label": "NO", "text": "Customer feedback has been positive so far."}
+{"id": "seed-no-149", "label": "NO", "text": "No issues were reported during the pilot run."}
+{"id": "seed-no-150", "label": "NO", "text": "Budget for the next phase is pending approval."}
+{"id": "seed-no-151", "label": "NO", "text": "The team attended the annual industry conference in October."}
+{"id": "seed-no-152", "label": "NO", "text": "특이 사항 없음"}
+{"id": "seed-no-153", "label": "NO", "text": "다음 분기에 해외 라인 적용 여부를 검토할 예정이다."}
+{"id": "seed-no-154", "label": "NO", "text": "정례 회의는 격주 수요일에 진행한다."}
+{"id": "seed-no-155", "label": "NO", "text": "시장 조사 결과 주요 고객의 관심이 높은 것으로 나타났다."}
+{"id": "seed-no-156", "label": "NO", "text": "과제 성과를 사내 기술 세미나에서 발표하였다."}
