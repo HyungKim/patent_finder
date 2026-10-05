@@ -563,6 +563,11 @@ def main(argv: list[str] | None = None) -> int:
         if os.environ.get("PATENT_MARKER_DEBUG"):
             raise
         return EXIT_ERROR
+    finally:
+        # 명령이 끝나면 DB 연결을 닫는다. 열어 둔 채로 두면 Windows에서 DB 파일을 교체(restore)할 수 없다.
+        from .storage import close_all
+
+        close_all()
 
 
 if __name__ == "__main__":

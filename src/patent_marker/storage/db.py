@@ -10,6 +10,7 @@ import os
 import shutil
 import sqlite3
 import threading
+import weakref
 from contextlib import contextmanager
 from importlib import resources
 from pathlib import Path
@@ -33,11 +34,25 @@ def _available_migrations() -> list[tuple[int, str, str]]:
     return migrations
 
 
+_INSTANCES: "weakref.WeakSet[Database]" = weakref.WeakSet()
+
+
+def close_all() -> None:
+    """이 프로세스에서 만든 Database의 연결(현재 스레드 것)을 모두 닫는다.
+
+    연결을 닫지 않고 두면 객체가 정리될 때까지 DB 파일이 열려 있다. Windows에서는 열린 파일을
+    교체할 수 없어서, 같은 프로세스에서 이어지는 복구(restore)가 실패한다. 닫힌 뒤에도 다시 쓰면 새로 연결된다.
+    """
+    for database in list(_INSTANCES):
+        database.close()
+
+
 class Database:
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._local = threading.local()
+        _INSTANCES.add(self)
 
     # ---- 연결 ----
     def connect(self) -> sqlite3.Connection:
@@ -56,6 +71,14 @@ class Database:
         if connection is not None:
             connection.close()
             self._local.connection = None
+
+    def __del__(self) -> None:
+        # sqlite3.Connection은 내부 순환 참조가 있어서 참조가 사라져도 바로 닫히지 않고 파일을 연 채로 남는다.
+        # 이 객체가 정리될 때 현재 스레드의 연결을 직접 닫는다.
+        try:
+            self.close()
+        except Exception:
+            pass
 
     @contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:
@@ -178,7 +201,14 @@ class Database:
             shutil.copy2(self.path, saved)
         temporary = self.path.with_name(self.path.name + ".restore.part")
         shutil.copy2(source, temporary)
-        os.replace(temporary, self.path)
+        try:
+            os.replace(temporary, self.path)
+        except PermissionError as exc:  # Windows: 다른 프로그램이 DB 파일을 열고 있으면 교체할 수 없다
+            temporary.unlink(missing_ok=True)
+            raise DatabaseError(
+                "DB 파일을 다른 프로그램이 사용하고 있어 교체하지 못했습니다. 검토 화면(review)과 실행 중인 다른 명령을 "
+                "모두 끝낸 뒤 다시 실행하세요. 기존 DB는 그대로입니다."
+            ) from exc
         return saved
 
 

@@ -1,9 +1,11 @@
 """저장소, 피드백 이력, 확정 라벨, 일괄 검토, snapshot·분할 시험 (스펙 9·10·12.1, 17.1)."""
 from __future__ import annotations
 
+import gc
 import json
 import shutil
 import sqlite3
+from pathlib import Path
 
 import pytest
 
@@ -81,6 +83,51 @@ def test_backup_and_restore_roundtrip(ingested, tmp_path):
     broken.write_bytes(b"not a database")
     with pytest.raises((DatabaseError, sqlite3.DatabaseError)):
         services.database.restore(broken)
+
+
+def test_restore_reports_a_database_in_use_and_keeps_the_current_one(ingested, tmp_path, monkeypatch):
+    services, _ = ingested
+    database = services.database
+    backup = database.backup(tmp_path / "backup" / "copy.sqlite3")
+    before = sha256_file(database.path)
+
+    def in_use(source, destination):  # Windows에서 다른 프로그램이 DB 파일을 열고 있을 때의 동작
+        raise PermissionError(13, "The process cannot access the file because it is being used by another process")
+
+    monkeypatch.setattr("patent_marker.storage.db.os.replace", in_use)
+    with pytest.raises(DatabaseError, match="다른 프로그램이 사용"):
+        database.restore(backup)
+    assert sha256_file(database.path) == before  # 기존 DB는 그대로
+    assert not list(database.path.parent.glob("*.restore.part"))  # 임시 파일을 남기지 않는다
+
+
+def _open_connections_to(path):
+    """이 프로세스(현재 스레드)에서 path를 열고 있는 sqlite 연결."""
+    found = []
+    for candidate in gc.get_objects():
+        if isinstance(candidate, sqlite3.Connection):
+            try:
+                files = [row[2] for row in candidate.execute("PRAGMA database_list")]
+            except sqlite3.ProgrammingError:  # 이미 닫혔거나 다른 스레드의 연결
+                continue
+            if any(name and Path(name).resolve() == Path(path).resolve() for name in files):
+                found.append(candidate)
+    return found
+
+
+def test_cli_commands_release_the_database_file(tmp_path, capsys):
+    # 명령이 연결을 열어 둔 채 끝나면 Windows에서는 같은 프로세스의 다음 restore가 DB 파일을 교체하지 못한다.
+    from patent_marker.cli import main
+
+    config = tmp_path / "config.yaml"
+    config.write_text("paths:\n  base_dir: .\nruntime:\n  offline: false\n", encoding="utf-8")
+    assert main(["status", "--config", str(config)]) == 0
+    assert json.loads(capsys.readouterr().out)["counts"]["documents"] == 0
+    assert _open_connections_to(tmp_path / "data" / "patent_marker.sqlite3") == []
+    backup = tmp_path / "backup" / "db.sqlite3"
+    assert main(["backup", "--config", str(config), "--output", str(backup)]) == 0
+    assert main(["restore", "--config", str(config), "--from", str(backup)]) == 0
+    assert "복구 완료" in capsys.readouterr().out
 
 
 # ---------------------------------------------------------------- 수집
