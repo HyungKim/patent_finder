@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-05T05:52:01Z",
+  "target": {
+    "platform": "win_amd64",
+    "python": "3.11"
+  },
+  "lock_file": {
+    "path": "requirements.lock",
+    "sha256": "f184b0cba1c1b818691a2e5e0bd331339a8cea7dc6578fa9ac54659a4a9f93c7"
+  },
+  "wheels": [
+    {
+      "file": "cffi-2.1.1-cp311-cp311-win_amd64.whl",
+      "size": 185096,
+      "sha256": "42f6930c31dc7f50732c9ae793c2786c7b6b044195967bbdde40bb9be81c4cc0"
+    },
+    {
+      "file": "charset_normalizer-3.5.2-cp311-cp311-win_amd64.whl",
+      "size": 214932,
+      "sha256": "87e50a3e7cb90af586b6c5faf23e302a970415ac73bd7bd90a515a04b427ef96"
+    },
+    {
+      "file": "cloudpickle-3.1.2-py3-none-any.whl",
+      "size": 22228,
+      "sha256": "9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a"
+    },
+    {
+      "file": "cryptography-50.0.2-cp311-abi3-win_amd64.whl",
+      "size": 3824692,
+      "sha256": "7afa5a6602a9f29af1f3a2965f831bae7c9d5d597b7cbb716d41ab3b7d89879c"
+    },
+    {
+      "file": "flatbuffers-25.12.19-py2.py3-none-any.whl",
+      "size": 26661,
+      "sha256": "7634f50c427838bb021c2d66a3d1168e9d199b0607e6329399f04846d42e20b4"
+    },
+    {
+      "file": "joblib-1.6.0-py3-none-any.whl",
+      "size": 306115,
+      "sha256": "3dbbf9f6e4b592a2357b854608e980fe6390d131d7a82f011a377ef2ebef7aba"
+    },
+    {
+      "file": "lxml-6.1.3-cp311-cp311-win_amd64.whl",
+      "size": 4032700,
+      "sha256": "7ae4949f212a53b007dbc355884fda122545c5764a54256c9217e419a62a6559"
+    },
+    {
+      "file": "narwhals-2.26.0-py3-none-any.whl",
+      "size": 474034,
+      "sha256": "29326d74f107c347fd1009bd58e38d9f7c7c5b51e6de97bc93dbc325d9038b54"
+    },
+    {
+      "file": "numpy-2.4.6-cp311-cp311-win_amd64.whl",
+      "size": 12608406,
+      "sha256": "1e254a00cdf42b1e4d5b3d68d33af63268d41340d8885df2ab6470f2e1500147"
+    },
+    {
+      "file": "onnxruntime-1.30.0-cp311-cp311-win_amd64.whl",
+      "size": 14309136,
+      "sha256": "0edd0145a6e3fce8a1276491dc784d615e3c58bcb952c9b4e5c876d5c6a12ad7"
+    },
+    {
+      "file": "packaging-26.3-py3-none-any.whl",
+      "size": 129956,
+      "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+    },
+    {
+      "file": "pdfminer_six-20260107-py3-none-any.whl",
+      "size": 6592252,
+      "sha256": "366585ba97e80dffa8f00cebe303d2f381884d8637af4ce422f1df3ef38111a9"
+    },
+    {
+      "file": "pdfplumber-0.11.10-py3-none-any.whl",
+      "size": 60047,
+      "sha256": "7741ea81bf165b474b153e6789d10d18e06b6ddcf3ec84289c3ef2fed6802580"
+    },
+    {
+      "file": "pillow-12.3.0-cp311-cp311-win_amd64.whl",
+      "size": 7233653,
+      "sha256": "8e95e1385e4998ae9694eeaa4730ba5457ff61185b3a55e2e7bea0880aef452a"
+    },
+    {
+      "file": "protobuf-7.36.2-cp310-abi3-win_amd64.whl",
+      "size": 456514,
+      "sha256": "a300819d441e078a5608c0d3c709796bb548136058fda017ae51d425b44fd353"
+    },
+    {
+      "file": "psutil-7.2.2-cp37-abi3-win_amd64.whl",
+      "size": 137737,
+      "sha256": "eb7e81434c8d223ec4a219b5fc1c47d0417b12be7ea866e24fb5ad6e84b3d988"
+    },
+    {
+      "file": "pycparser-3.0-py3-none-any.whl",
+      "size": 48172,
+      "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
+    },
+    {
+      "file": "pypdf-6.19.0-py3-none-any.whl",
+      "size": 395480,
+      "sha256": "7e5d6e730e7dae87d560a2cee218b852f6498c8be61966f3cd02ead971e48d14"
+    },
+    {
+      "file": "pypdfium2-5.14.0-py3-none-win_amd64.whl",
+      "size": 3947280,
+      "sha256": "149fd5c6397b8df8bf7911a93506eff0be874f877afe7ac936cf5d37d21a6a06"
+    },
+    {
+      "file": "python_docx-1.2.0-py3-none-any.whl",
+      "size": 252987,
+      "sha256": "3fd478f3250fbbbfd3b94fe1e985955737c145627498896a8a6bf81f4baf66c7"
+    },
+    {
+      "file": "python_pptx-1.0.2-py3-none-any.whl",
+      "size": 472788,
+      "sha256": "160838e0b8565a8b1f67947675886e9fea18aa5e795db7ae531606d68e785cba"
+    },
+    {
+      "file": "pyyaml-6.0.3-cp311-cp311-win_amd64.whl",
+      "size": 158763,
+      "sha256": "9f3bfb4965eb874431221a3ff3fdcddc7e74e3b07799e0e84ca4a0f867d449bf"
+    },
+    {
+      "file": "scikit_learn-1.9.1-cp311-cp311-win_amd64.whl",
+      "size": 8329877,
+      "sha256": "220fa18152852a5ce29c49e1eaba9d44ec44631cd2e5cf65f5a40eafa5ab3412"
+    },
+    {
+      "file": "scipy-1.17.1-cp311-cp311-win_amd64.whl",
+      "size": 36607512,
+      "sha256": "d30e57c72013c2a4fe441c2fcb8e77b14e152ad48b5464858e07e2ad9fbfceff"
+    },
+    {
+      "file": "threadpoolctl-3.7.0-py3-none-any.whl",
+      "size": 26362,
+      "sha256": "cd8b60b5641b45c67bbf73c64c843235fc2d8a480c87389f52f5dbee893b86be"
+    },
+    {
+      "file": "tokenizers-0.23.2-cp310-abi3-win_amd64.whl",
+      "size": 2863236,
+      "sha256": "2e96f5699d5249c9c64aa8412e044f727aae3a4098cf830f9901ec1afc361cde"
+    },
+    {
+      "file": "typing_extensions-4.16.0-py3-none-any.whl",
+      "size": 45571,
+      "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+    },
+    {
+      "file": "xlsxwriter-3.2.9-py3-none-any.whl",
+      "size": 175315,
+      "sha256": "9a5db42bc5dff014806c58a20b9eae7322a134abb6fce3c92c181bfb275ec5b3"
+    }
+  ],
+  "model": {
+    "model_id": "intfloat/multilingual-e5-small",
+    "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+    "license": "mit",
+    "source": "https://huggingface.co/intfloat/multilingual-e5-small/tree/614241f622f53c4eeff9890bdc4f31cfecc418b3",
+    "files": {
+      "model.onnx": {
+        "sha256": "ca456c06b3a9505ddfd9131408916dd79290368331e7d76bb621f1cba6bc8665",
+        "size": 470268510,
+        "source_path": "onnx/model.onnx",
+        "verified_by": "hub-lfs-sha256"
+      },
+      "tokenizer.json": {
+        "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+        "size": 17082730,
+        "source_path": "onnx/tokenizer.json",
+        "verified_by": "hub-lfs-sha256"
+      },
+      "config.json": {
+        "sha256": "bbb7c1333fc4b3e27fbc9cd5d2070aabcc1d4dfb99917c3633e772f97545a6b6",
+        "size": 653,
+        "source_path": "onnx/config.json",
+        "verified_by": "hub-git-blob-sha1"
+      },
+      "MODEL_CARD.md": {
+        "sha256": "0038de97aee16258cecbad7ffda4b4febd6953e747a00e0ddbc8e6ed241e9c1c",
+        "size": 497538,
+        "source_path": "README.md",
+        "verified_by": "hub-git-blob-sha1"
+      }
+    }
+  },
+  "install": "python -m pip install --no-index --find-links ./vendor/wheels --require-hashes --no-deps -r requirements.lock"
+}
