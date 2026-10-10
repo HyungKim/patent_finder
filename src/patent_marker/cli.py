@@ -269,6 +269,41 @@ def cmd_mark(args: argparse.Namespace, config: AppConfig) -> int:
     return EXIT_OK
 
 
+def cmd_laya_compare(args: argparse.Namespace, config: AppConfig) -> int:
+    """실험: 저장된 run의 1차 후보를 Laya로 다시 판단해 비교 자료를 만든다. 1차 결과와 기존 결과물은 바꾸지 않는다."""
+    from .runtime import enter_offline_mode
+    from .second_stage.compare import run_comparison
+    from .second_stage.laya import DEFAULT_MODEL_DIR, LayaSecondStage, LayaUnavailable
+    from .storage import open_database
+
+    if not 0.0 <= args.agree_at <= 1.0:
+        _print("오류: --agree-at은 0과 1 사이의 값이어야 합니다.")
+        return EXIT_ERROR
+    if config.runtime.offline:
+        enter_offline_mode()
+    database = open_database(config.database_path)
+    if database.query_one("SELECT 1 FROM runs WHERE run_id = ?", (args.run,)) is None:
+        _print(f"오류: run을 찾을 수 없습니다: {args.run}")  # 모델을 불러오기 전에 확인한다
+        return EXIT_ERROR
+    model_dir = config.resolve(config.laya.local_path or DEFAULT_MODEL_DIR)
+    try:
+        adapter = LayaSecondStage(model_dir, config.data_dir / "laya_runtime", threads=config.runtime.cpu_threads,
+                                  agree_at=args.agree_at)
+    except LayaUnavailable as exc:
+        _print(f"오류: {exc}")
+        return EXIT_ERROR
+    _print(f"Laya 모델 {adapter.model_version} · 불러오는 데 {adapter.load_seconds:.1f}초")
+    output = Path(args.output) if args.output else config.outputs_dir / args.run / "laya"
+    summary = run_comparison(database, config, args.run, adapter, output, progress=_print)
+    _print(f"1차 후보 {summary['candidates']}개 중 동의 {summary['agree']}개, 이견 {summary['disagree']}개, "
+           f"판단 못 함 {summary['not_assessed']}개 · 판단에 {summary['assess_seconds']}초")
+    _print(f"비교 자료: {summary['output_dir']}")
+    _print("  laya_report.html      후보마다 Laya 점수와 판단")
+    _print("  marked_laya_agree     Laya도 후보로 본 것만 표시한 사본 (비교용)")
+    _print("\n주의: 실험 기능입니다. '동의' 기준은 검증되지 않았고, 1차 판정과 기존 결과물은 그대로입니다.")
+    return EXIT_OK
+
+
 def cmd_export(args: argparse.Namespace, config: AppConfig) -> int:
     from .export.runner import export_run
     from .runtime import enter_offline_mode
@@ -554,6 +589,12 @@ def build_parser() -> argparse.ArgumentParser:
     mark.add_argument("--pick", action="store_true", help="경로를 주지 않았으면 파일 열기 창에서 고르기")
     mark.add_argument("--open", action="store_true", help="끝나면 결과 폴더 열기 (Windows)")
     mark.add_argument("--encoding", help="TXT/MD 인코딩 (기본 UTF-8)")
+
+    laya = add("laya-compare", cmd_laya_compare, "실험: 저장된 run의 1차 후보를 Laya로 다시 판단해 비교 자료 만들기")
+    laya.add_argument("--run", required=True)
+    laya.add_argument("--output", help="비교 자료 폴더 (기본: outputs/<run>/laya)")
+    laya.add_argument("--agree-at", type=float, default=0.5,
+                      help="Laya 점수가 이 값 이상이면 동의로 본다 (기본 0.5, 검증되지 않은 값)")
 
     export = add("export", cmd_export, "저장된 run의 결과물 다시 만들기")
     export.add_argument("--run", required=True)

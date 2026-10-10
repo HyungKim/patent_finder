@@ -40,4 +40,5 @@ testpaths = ["tests"]
 pythonpath = ["src", "tests", "tests/fixtures"]
 markers = [
     "requires_model: 로컬 E5 모델 디렉터리(models/multilingual-e5-small)가 있어야 실행되는 시험",
+    "requires_laya: Laya 실험 환경(.venv-laya)과 받아 둔 Laya 모델이 있어야 실행되는 시험",
 ]

@@ -215,7 +215,7 @@ def test_pip_input_files_are_ascii():
     # 한글 주석이 있으면 운영 PC에서 설치 명령이 UnicodeDecodeError로 실패한다.
     root = Path(__file__).resolve().parents[2]
     files = [root / "requirements.lock", *sorted((root / "requirements").glob("*.in"))]
-    assert len(files) == 4
+    assert len(files) == 5  # requirements.lock, base, tokenizers, dev, laya(실험용)
     for requirements_file in files:
         assert requirements_file.read_bytes().isascii(), f"{requirements_file.name}에 ASCII가 아닌 문자가 있다"
 

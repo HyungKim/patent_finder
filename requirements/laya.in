@@ -1,0 +1,9 @@
+# Experimental second stage (Laya). Not part of the normal install.
+# Laya needs PyTorch and transformers, which the normal runtime deliberately avoids,
+# so these go into a separate environment (.venv-laya). See docs/LAYA_EXPERIMENT.md.
+# ASCII only: see the note at the top of requirements.lock.
+laya==0.3.27
+torch==2.14.1
+transformers==5.18.0
+safetensors==0.8.0
+tokenizers==0.23.2

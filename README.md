@@ -7,6 +7,7 @@ PPTX, PDF, DOCX, TXT, MD 보고자료를 읽어 특허 담당자가 검토해 �
 - 구현 기준: [PATENT_MARKING_SYSTEM_SPEC.md](PATENT_MARKING_SYSTEM_SPEC.md) v1.0
 - 스펙에서 바꾼 점: [docs/SPEC_AMENDMENTS.md](docs/SPEC_AMENDMENTS.md)
 - 구현 범위: Phase 0, 1A, 1B + PPTX/PDF 사본 마킹. Laya 2단계, active learning 큐, OCR, DOCX 사본 마킹은 미구현.
+- Laya는 분석 흐름에 넣지 않았다. 1차 후보를 따로 다시 판단해 비교해 보는 실험 명령만 있다: [docs/LAYA_EXPERIMENT.md](docs/LAYA_EXPERIMENT.md)
 
 ## 동작 방식
 
@@ -125,6 +126,7 @@ GitHub 릴리스의 설치 묶음(zip)에는 프로그램, 설치 패키지, 모
 | `status` | 운영 모델, 라벨 수, 재학습 제안 여부 |
 | `backup --output …` / `restore --from …` | DB 백업·복구 |
 | `benchmark --segments 1000` | 임베딩 처리 성능 측정 |
+| `laya-compare --run demo-001` | 실험: 저장된 run의 1차 후보를 Laya로 다시 판단해 비교 자료 만들기. 별도 환경(`.venv-laya`)에서만 동작하고 1차 결과는 바꾸지 않는다 ([docs/LAYA_EXPERIMENT.md](docs/LAYA_EXPERIMENT.md)) |
 
 모든 명령에 `--config 경로` 를 줄 수 있다. 기본은 `./config/default.yaml`.
 
@@ -175,7 +177,7 @@ PPT, DOC, HWP, HWPX, 매크로 문서, 암호화 문서, 이미지 파일은 미
 
 ## 검수 결과
 
-2026-10-05, macOS 26 arm64 (10코어, RAM 24GiB), Python 3.11.15, 합성 자료 기준. `pytest` 148개 통과(단위 116, 통합 32. 그중 7개는 실제 E5 모델 사용). 같은 날 GitHub의 Windows 러너(영문 Windows Server)에서 Python 3.11, 3.12, 3.13 각각으로 148개가 통과했다.
+2026-10-05, macOS 26 arm64 (10코어, RAM 24GiB), Python 3.11.15, 합성 자료 기준. `pytest` 168개 통과(단위 122, 통합 46. 그중 8개는 실제 E5 모델 사용). 실제 Laya 모델을 쓰는 시험 1개는 별도 환경(`.venv-laya`)에서 따로 통과했다. 같은 날 GitHub의 Windows 러너(영문 Windows Server)에서는 Laya 비교 실험을 넣기 전의 148개가 Python 3.11, 3.12, 3.13 각각으로 통과했다. 그 뒤에 넣은 시험 20개는 Windows에서 아직 돌려 보지 않았다.
 
 ### 스펙 17.1 기능·회귀 시험
 
@@ -192,7 +194,7 @@ PPT, DOC, HWP, HWPX, 매크로 문서, 암호화 문서, 이미지 파일은 미
 | YES/NO/HOLD와 수정 이력, 미검토·HOLD·파싱 오류의 학습 제외 | 통과 | `test_storage_feedback.py` |
 | 같은 문서 계열이 train/test에 동시에 없음 | 통과 | `test_full_flow…`, `test_split_assignment_is_sticky…` |
 | 과거 판정 재현 | 통과 | `verify-run`: 최대 점수 차이 5.6e-17, 판정 불일치 0건 |
-| shadow on/off 출력 불변 | 해당 없음 | Laya 미구현 (`laya.mode: off` 만 허용) |
+| shadow on/off 출력 불변 | 실험 명령만 통과 | 분석 흐름은 `laya.mode: off` 만 허용한다. 실험 명령 `laya-compare` 가 1차 판정, 기존 결과물, 다른 DB 표를 바꾸지 않음을 시험 (`test_comparison_adds_results_and_leaves_first_stage_outputs_untouched`) |
 | 승격·롤백 시 bundle 호환성 검사, 진행 중 run의 버전 불변 | 통과 | `test_bundle_roundtrip…`, `test_interrupted_run_resumes…` |
 | 중단·재시작 시 DB 중복과 손상 캐시 없음 | 통과 | `test_interrupted_run_resumes…`, `test_embedding_cache_reuses…` |
 | 기존 마킹을 걷어내고 시작 (스펙 외 추가) | 통과 | `test_existing_marks.py`: 마킹 사본을 다시 넣어도 본문·후보가 원본과 같고 표시가 쌓이지 않음. 작성자 형광펜·메모·주석은 사본에서만 제거되고 입력 파일 해시는 불변 |
@@ -214,10 +216,19 @@ PPT, DOC, HWP, HWPX, 매크로 문서, 암호화 문서, 이미지 파일은 미
 
 | 형식 | Recall | Precision | 표시 비율 | 놓친 후보 | 잘못 표시 | 추출 누락 |
 |---|---|---|---|---|---|---|
-| PPTX | 0.957 (110/115) | 0.748 | 0.278 | 5 | 37 | 0 |
-| PDF | 0.955 (107/112) | 0.690 | 0.299 | 5 | 48 | 0 |
+| PPTX | 0.957 (110/115) | 0.797 | 0.261 | 5 | 28 | 0 |
+| PDF | 0.955 (107/112) | 0.709 | 0.291 | 5 | 44 | 0 |
 
-잘못 표시한 85건은 블록도의 짧은 블록 이름 31건, 수단 없이 문제만 적은 "배경" 문장 16건, 슬라이드 제목 16건이 대부분이다. 놓친 후보는 두 형식 모두 표 안의 짧은 조건 문장이었다.
+잘못 표시한 72건은 수단 없이 문제나 결과만 적은 불릿 문장 32건(그중 "배경" 문장 16건), 블록도의 짧은 블록 이름 18건, 슬라이드 제목 16건이 대부분이다. 블록 이름 18건 중 17건은 PDF에서 나왔다. PDF에서는 블록 이름들이 한 줄로 합쳐져 한 구간으로 추출된다. 놓친 후보는 두 형식 모두 표 안의 짧은 조건 문장이었다.
+
+2026-10-05에 대조 도구(`tools/check_expected.py`)의 짝짓기 규칙을 고쳤다. 그 전에는 블록 이름 같은 짧은 항목을 그 낱말이 들어간 다른 후보 문장에도 짝지어, 잘못 표시를 PPTX 37건, PDF 48건으로 실제보다 많게 셌다. Recall은 그대로다.
+
+같은 자료에서 1차 후보 222개를 Laya로 다시 판단해 '이견'인 후보를 빼 봤다(실험, 동의 기준 0.5). 헛표시는 줄었지만 진짜 후보도 함께 잃어, 걸러내는 용도로는 쓸 수 없는 결과다. 다른 기준에서의 수치와 문장 종류별 결과는 [docs/LAYA_EXPERIMENT.md](docs/LAYA_EXPERIMENT.md)에 있다.
+
+| 형식 | Recall | Precision | 표시 비율 | 진짜 후보 | 헛표시 |
+|---|---|---|---|---|---|
+| PPTX | 0.957 → 0.870 | 0.797 → 0.909 | 0.261 → 0.208 | 110 → 100 | 28 → 10 |
+| PDF | 0.955 → 0.875 | 0.709 → 0.797 | 0.291 → 0.237 | 107 → 98 | 44 → 25 |
 
 이 수치는 모두 합성 자료에 대한 것이며 실제 문서에서의 성능을 뜻하지 않는다.
 
@@ -225,7 +236,7 @@ PPT, DOC, HWP, HWPX, 매크로 문서, 암호화 문서, 이미지 파일은 미
 
 - seed 분류기와 그 threshold는 실제 문서에서 검증되지 않았다. 놓치는 후보가 있을 수 있다.
 - 대상 회사 PC(한국어 Windows 10/11)에서의 설치·실행은 확인하지 않았다. Windows에서는 GitHub의 러너(영문 Windows Server)에서만 확인했다. 16GB 메모리 조건과 실제 크기 문서도 확인하지 않았다.
-- Laya 2단계(shadow/assist/filter), active learning 큐 배분, OCR, DOCX 사본 마킹은 구현하지 않았다.
+- 분석 흐름 안의 Laya 2단계(shadow/assist/filter), active learning 큐 배분, OCR, DOCX 사본 마킹은 구현하지 않았다. Laya는 따로 돌려 비교하는 실험 명령만 있고, 기본 설치와 설치 묶음에는 들어 있지 않다.
 - 작성자가 직접 넣은 형광펜·메모·PDF 주석은 마킹 사본에 남지 않는다(입력 파일에는 그대로 있다). 일반 도형, 잉크, 페이지 내용으로 그려진 색칠은 지우지 못한다.
 - 마킹 사본을 다시 넣으면 원본과 별개의 문서로 저장된다(같은 문서 계열). 원본에 준 판정은 이어지지 않는다.
 - 글꼴이 포함되지 않은 한글 CID 글꼴 PDF에서는 가운뎃점 같은 일부 기호가 추출되지 않는 것을 확인했다(추출 라이브러리의 문자 대응표 한계).
@@ -255,13 +266,13 @@ src/patent_marker/
   feedback/                    이벤트, 확정 라벨, 검토 큐, snapshot
   evaluation/                  분할, 지표, 보고서
   export/                      html, jsonl, 사본 마킹
-  second_stage/                2단계 어댑터 인터페이스 (off)
+  second_stage/                2단계 어댑터 인터페이스 (off), Laya 비교 실험 (laya.py, compare.py)
   ui/                          로컬 검토 화면
   seed_data/                   합성 seed 예문
 tests/                         단위·통합 시험, 합성 시험 자료
 tools/                         반입 준비 도구 (준비 환경 전용), 설치 본체 windows_setup.py
-docs/                          라벨 가이드, 오프라인 설치, 스펙 변경 내역
+docs/                          라벨 가이드, 오프라인 설치, 스펙 변경 내역, Laya 비교 실험
 .github/workflows/windows.yml  Windows 러너에서 설치와 시험 확인
 ```
 
-`models/`, `data/`, `artifacts/`, `outputs/`, `vendor/wheels/` 는 Git에 넣지 않는다. 실제 보고자료, 라벨, DB, 임베딩, 모델 가중치도 넣지 않는다.
+`models/`, `data/`, `artifacts/`, `outputs/`, `vendor/wheels/`, `.venv-laya/` 는 Git에 넣지 않는다. 실제 보고자료, 라벨, DB, 임베딩, 모델 가중치도 넣지 않는다.

@@ -19,6 +19,7 @@ from patent_marker.services import Services, build_services
 REPO_ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = REPO_ROOT / "tests" / "fixtures" / "synthetic"
 MODEL_DIR = REPO_ROOT / "models" / "multilingual-e5-small"
+LAYA_MODEL_DIR = REPO_ROOT / "models" / "laya-multilingual"
 
 
 class FakeTokenizer:

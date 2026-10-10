@@ -1,7 +1,8 @@
 """2단계 판단 어댑터 인터페이스 (스펙 8절).
 
 이 프로젝트 자체의 인터페이스이며 특정 SDK의 호출 예제가 아니다.
-현재 버전은 laya.mode=off만 지원하고 2단계 모델을 로드하지 않는다. shadow/assist/filter는 Phase 3 이후.
+현재 버전은 laya.mode=off만 지원하고, 분석 흐름 안에서는 2단계 모델을 로드하지 않는다. shadow/assist/filter는 Phase 3 이후.
+Laya를 따로 돌려 비교해 보는 실험 명령(laya-compare)은 laya.py와 compare.py에 있다.
 """
 from __future__ import annotations
 

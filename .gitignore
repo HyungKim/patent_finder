@@ -15,3 +15,4 @@ artifacts/
 outputs/
 
 .DS_Store
+.venv-laya/
