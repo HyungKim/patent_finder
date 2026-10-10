@@ -50,6 +50,7 @@ GitHub 릴리스의 설치 묶음(zip)에는 프로그램, 설치 패키지, 모
 1. zip을 풀어 나온 `patent_finder` 폴더를 원하는 곳(예: `D:\`)에 둔다.
 2. `setup.bat` 을 더블클릭한다. 인터넷 없이 설치하고 점검까지 한다.
 3. `mark.bat` 을 더블클릭하면 파일 열기 창이 뜬다. PPTX·PDF 파일을 고르면 분석하고 결과 폴더를 연다. 파일이나 폴더를 `mark.bat` 아이콘 위에 끌어다 놓아도 된다. 검토 화면은 `run.bat` 이다.
+4. 판정이 쌓이면 `train.bat` 을 더블클릭한다. 판정으로 다시 학습하고 지금 모델과 비교해 보여 준 뒤, `y` 를 누르면 다음 분석부터 새 모델을 쓴다. 판정은 저절로 학습되지 않는다.
 
 ### 점검
 
@@ -112,6 +113,11 @@ GitHub 릴리스의 설치 묶음(zip)에는 프로그램, 설치 패키지, 모
 - `snapshot` 은 확정 YES/NO 라벨과 문서 계열 단위 train/validation/test 분할을 고정한다.
 - `train` 은 train partition으로 학습하고 validation에서 Recall 목표(0.95)를 만족하는 가장 높은 threshold를 고른다.
 - `promote` 는 기준(독립 test, 누수 없음, 검증된 threshold, end-to-end Recall ≥ 0.95, 양성 100개·문서 계열 20개 이상, 평가 문서 전체 검토)에 못 미치면 차단한다. 기준 미달 모델을 시범 사용하려면 `--stage pilot --reason "사유"` 를 쓴다. 결과물에 PILOT이 표시된다.
+- `retrain` 은 위 네 단계를 한 번에 한다 (`train.bat` 이 쓰는 명령). snapshot → 학습 → test(없으면 validation) 문서로 새 모델과 지금 모델을 평가해 표로 보여 준 뒤, 운영 모델로 바꿀지 묻는다. 정식 승격 조건을 채우면 production, 아니면 pilot으로 올린다. `--promote yes|no` 로 묻지 않게 할 수 있고, 입력이 닫혀 있으면 바꾸지 않는다.
+
+```bash
+.venv/bin/python -m patent_marker.cli retrain
+```
 
 ### 그 밖의 명령
 
@@ -251,10 +257,11 @@ PPT, DOC, HWP, HWPX, 매크로 문서, 암호화 문서, 이미지 파일은 미
 ## 저장소 구조
 
 ```text
-setup.bat, mark.bat, run.bat   Windows용 설치, 끌어다 놓아 분석, 검토 화면
+setup.bat, mark.bat, run.bat, train.bat   Windows용 설치, 분석, 검토 화면, 판정으로 다시 학습
 config/default.yaml            기본 설정
 src/patent_marker/
   cli.py                       명령줄 진입점
+  retrain.py                   판정으로 다시 학습 → 평가 → 확인 뒤 교체 (train.bat)
   dropped.py                   끌어다 놓은 파일 이름 되살리기 (mark.bat)
   pickdialog.py                파일 열기 창 (mark.bat을 더블클릭했을 때)
   parsers/                     text, docx, pptx, pdf

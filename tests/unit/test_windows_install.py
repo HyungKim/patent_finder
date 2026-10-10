@@ -19,7 +19,7 @@ from patent_marker.analysis import run_analysis
 from patent_marker.cli import main
 from patent_marker.dropped import recover_dropped
 
-BATCH_FILES = ("setup.bat", "mark.bat", "run.bat")
+BATCH_FILES = ("setup.bat", "mark.bat", "run.bat", "train.bat")
 
 
 def _load_setup_tool():
@@ -58,7 +58,9 @@ def test_batch_files_point_at_things_that_exist():
     assert "-m patent_marker.cli mark --open --pick %*" in mark and "PM_CMDLINE" in mark
     run = (REPO_ROOT / "run.bat").read_bytes().decode("utf-8")
     assert "-m patent_marker.cli review --port %PORT%" in run
-    for text in (mark, run):
+    train = (REPO_ROOT / "train.bat").read_bytes().decode("utf-8")
+    assert "-m patent_marker.cli retrain %*" in train and "pause" in train
+    for text in (mark, run, train):
         assert r'set "PYTHONPATH=%~dp0src"' in text and r".venv\Scripts\python.exe" in text
 
 

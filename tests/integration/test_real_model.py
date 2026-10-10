@@ -170,6 +170,35 @@ def test_cli_doctor_status_backup_and_blocked_training(cli_env, capsys):
     assert "승격 차단" in capsys.readouterr().out
 
 
+def test_cli_retrain_runs_the_whole_train_bat_flow(cli_env, capsys, monkeypatch):
+    from helpers import label_everything, write_corpus
+    from patent_marker.config import load_config
+    from patent_marker.services import build_services
+
+    base, config, _inbox = cli_env
+    corpus = base / "corpus"
+    expected = write_corpus(corpus, families=8)
+    assert main(["mark", "--config", config, str(corpus)]) == 0
+    capsys.readouterr()
+    services = build_services(load_config(Path(config)), need_encoder=False)  # 검토 화면 대신 같은 DB에 판정을 남긴다
+    assert label_everything(services, expected) > 0
+
+    def closed(prompt: str = "") -> str:  # 더블클릭 창의 입력이 닫혀 있는 경우
+        raise EOFError
+
+    monkeypatch.setattr("builtins.input", closed)
+    assert main(["retrain", "--config", config]) == 0
+    out = capsys.readouterr().out
+    assert "[4/4]" in out and "운영 모델은 그대로" in out
+    assert main(["retrain", "--config", config, "--promote", "yes"]) == 0
+    assert "운영 모델로 바꿨습니다" in capsys.readouterr().out
+    assert main(["status", "--config", config]) == 0
+    status = json.loads(capsys.readouterr().out)
+    assert status["model"]["model_version"] == "classifier-0002" and status["model"]["stage"] in ("PILOT", "PRODUCTION")
+    assert main(["mark", "--config", config, str(corpus)]) == 0  # 다음 분석부터 새 모델
+    assert "classifier-0002" in capsys.readouterr().out
+
+
 def test_cli_rejects_missing_model_and_bad_config(tmp_path, capsys):
     config = tmp_path / "config.yaml"
     config.write_text("paths:\n  base_dir: .\n  e5: models/not-there\n", encoding="utf-8")

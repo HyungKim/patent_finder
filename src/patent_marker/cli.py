@@ -442,6 +442,20 @@ def cmd_promote(args: argparse.Namespace, config: AppConfig) -> int:
     return EXIT_OK
 
 
+def cmd_retrain(args: argparse.Namespace, config: AppConfig) -> int:
+    """train.bat의 본체: 판정으로 다시 학습 → 평가 → 사람이 답하면 운영 모델 교체."""
+    from .retrain import RetrainBlocked, retrain
+
+    services = _services(config)
+    try:
+        retrain(services, name=args.name, decision=args.promote, stage=args.stage, reason=args.reason,
+                say=_print, ask=input)
+    except RetrainBlocked as exc:
+        _print(f"중단: {exc}")
+        return EXIT_BLOCKED
+    return EXIT_OK
+
+
 def cmd_rollback(args: argparse.Namespace, config: AppConfig) -> int:
     from .promotion import rollback
 
@@ -627,6 +641,14 @@ def build_parser() -> argparse.ArgumentParser:
     promote.add_argument("--report", required=True, help="evaluate가 만든 보고서 JSON")
     promote.add_argument("--stage", choices=("production", "pilot"), default="production")
     promote.add_argument("--reason", help="파일럿 승격 사유")
+
+    retrain = add("retrain", cmd_retrain, "판정으로 다시 학습 → 평가 → 확인 뒤 운영 모델 교체 (train.bat이 쓰는 명령)")
+    retrain.add_argument("--name", help="snapshot 이름 (기본: labels-날짜-시각)")
+    retrain.add_argument("--promote", choices=("ask", "yes", "no"), default="ask",
+                         help="평가 뒤 운영 모델로 바꿀지. ask는 화면에서 묻는다 (입력이 닫혀 있으면 no)")
+    retrain.add_argument("--stage", choices=("auto", "pilot", "production"), default="auto",
+                         help="auto: 정식 승격 조건을 채우면 production, 아니면 pilot")
+    retrain.add_argument("--reason", help="pilot 승격 사유")
 
     rollback = add("rollback", cmd_rollback, "이전 운영 모델로 되돌리기")
     rollback.add_argument("--model", required=True, help="예: classifier-0000")

@@ -6,12 +6,14 @@ GitHub의 Windows 러너에서 묶음을 푼 폴더 안에서 실행한다(.gith
     python tests\\windows_bundle_check.py --expect 3.12
     python tests\\windows_bundle_check.py --expect 3.12 --moved     (폴더를 다른 곳으로 옮긴 뒤)
     python tests\\windows_bundle_check.py --expect 3.12 --upgraded  (새 폴더에 설치하고 예전 기록을 옮긴 뒤)
+    python tests\\windows_bundle_check.py --expect 3.12 --code-updated  (이전 버전 설치 위에 code-only zip을 덮어쓴 뒤)
 
 하는 일
     1) setup.bat      더블클릭했을 때처럼 실행. 다시 실행해도 되는지도 본다
     2) mark.bat       더블클릭하면 파일 열기 창이 뜨는지, 고른 파일을 분석하는지.
                       탐색기가 파일을 끌어다 놓을 때 만드는 명령줄 그대로도 본다 (공백·한글·괄호·&가 든 이름, 폴더)
     3) run.bat        검토 화면을 띄워 접속되는지
+    4) train.bat      합성 보고서를 분석하고 판정을 남긴 뒤, 더블클릭(입력 닫힘)과 --promote yes 로 학습·평가·교체가 되는지
 
 표준 라이브러리만 쓴다. batch 파일의 pause는 입력을 닫아 두면 바로 지나간다.
 """
@@ -60,6 +62,43 @@ def drop(batch: str, paths: list[Path]) -> str:
     """탐색기가 파일을 batch 파일 위에 끌어다 놓을 때 만드는 명령줄. 공백이 든 경로만 따옴표로 감싼다."""
     arguments = " ".join(f'"{path}"' if " " in str(path) else str(path) for path in paths)
     return f'cmd /c ""{ROOT / batch}" {arguments}"'
+
+
+def active_model() -> str | None:
+    """DB에 기록된 운영 모델 버전. DB나 기록이 없으면 None."""
+    database = ROOT / "data" / "patent_marker.sqlite3"
+    if not database.is_file():
+        return None
+    connection = sqlite3.connect(str(database))
+    try:
+        row = connection.execute("SELECT value FROM system_state WHERE key = 'active_model'").fetchone()
+    finally:
+        connection.close()
+    return (json.loads(row[0]) or {}).get("model_version") if row else None
+
+
+def latest_run_model() -> str | None:
+    """가장 최근 분석 run이 쓴 모델 버전."""
+    database = ROOT / "data" / "patent_marker.sqlite3"
+    connection = sqlite3.connect(str(database))
+    try:
+        row = connection.execute("SELECT classifier_version FROM runs ORDER BY started_at DESC LIMIT 1").fetchone()
+    finally:
+        connection.close()
+    return row[0] if row else None
+
+
+MAKE_CORPUS = (
+    "import json, sys; sys.path.insert(0, 'tests'); from pathlib import Path; from helpers import write_corpus; "
+    "expected = write_corpus(Path(sys.argv[1]), families=24); "
+    "Path(sys.argv[2]).write_text(json.dumps(expected, ensure_ascii=False), encoding='utf-8'); print('corpus', len(expected))"
+)
+LABEL_ALL = (
+    "import json, sys; sys.path.insert(0, 'tests'); from pathlib import Path; from helpers import label_everything; "
+    "from patent_marker.config import load_config; from patent_marker.services import build_services; "
+    "services = build_services(load_config(None), need_encoder=False); "
+    "print('labeled', label_everything(services, json.loads(Path(sys.argv[1]).read_text(encoding='utf-8'))))"
+)
 
 
 def count_runs() -> int:
@@ -119,6 +158,8 @@ def main() -> int:
     parser.add_argument("--moved", action="store_true", help="설치한 폴더를 옮긴 뒤의 점검")
     parser.add_argument("--upgraded", action="store_true",
                         help="새 폴더에 설치하고 예전 폴더의 data·artifacts·outputs를 옮겨 온 뒤의 점검")
+    parser.add_argument("--code-updated", action="store_true",
+                        help="이전 버전을 설치한 폴더에 code-only zip을 덮어쓴 뒤의 점검 (가상환경은 그대로)")
     args = parser.parse_args()
     if os.name != "nt":
         print("이 점검은 Windows에서만 돈다.")
@@ -128,7 +169,7 @@ def main() -> int:
     python = ROOT / ".venv" / "Scripts" / "python.exe"
     print(f"폴더: {ROOT}\nPM_PYTHON: {env.get('PM_PYTHON') or '(지정 안 함: setup.bat이 찾는다)'}", flush=True)
     note("묶음 구성: batch 파일, 설치 패키지, 모델이 있음",
-         all((ROOT / name).exists() for name in ("setup.bat", "mark.bat", "run.bat", "vendor/wheels",
+         all((ROOT / name).exists() for name in ("setup.bat", "mark.bat", "run.bat", "train.bat", "vendor/wheels",
                                                   "models/multilingual-e5-small/model.onnx", "requirements.lock")))
 
     runs_before = count_runs()
@@ -136,8 +177,8 @@ def main() -> int:
         note("새 버전으로 바꾸기: 옮겨 온 기록이 있음", runs_before > 0, f"run {runs_before}개")
 
     # ---- 1. setup.bat ---------------------------------------------------------
-    if args.moved:
-        note("옮긴 뒤: 가상환경이 그대로 있음", python.is_file())
+    if args.moved or args.code_updated:
+        note("옮긴 뒤 또는 코드만 바꾼 뒤: 가상환경이 그대로 있음", python.is_file())
     else:
         note("처음 상태: 가상환경이 아직 없음", not python.exists())
         code, out = run(["cmd", "/c", "setup.bat"], env, 1800, "setup.bat")
@@ -246,6 +287,30 @@ def main() -> int:
     if args.upgraded:
         note("새 버전으로 바꾸기: 예전 기록에 이어 새 분석이 쌓임", count_runs() > runs_before,
              f"run {runs_before}개 -> {count_runs()}개")
+
+    # ---- 4. train.bat (판정으로 다시 학습) ----------------------------------------
+    print("\n----- train.bat -----", flush=True)
+    venv_env = dict(env, PYTHONPATH=str(ROOT / "src"))
+    corpus = Path(tempfile.mkdtemp(prefix="pf-corpus-")) / "합성 보고서 모음"
+    expected_path = corpus.parent / "expected.json"
+    code, out = run([str(python), "-c", MAKE_CORPUS, str(corpus), str(expected_path)], venv_env, 300, "합성 TXT 보고서 만들기")
+    note("train.bat 준비: 합성 TXT 보고서 24개를 만듦", code == 0 and len(list(corpus.glob("*.txt"))) == 24, f"종료 코드 {code}")
+    code, out = run(drop("mark.bat", [corpus]), env, 1800, "mark.bat (합성 보고서 폴더를 끌어다 놓음)")
+    note("train.bat 준비: 합성 보고서를 분석함", code == 0 and "결과 폴더:" in out, f"종료 코드 {code}")
+    code, out = run([str(python), "-c", LABEL_ALL, str(expected_path)], venv_env, 300, "판정 남기기 (검토 화면과 같은 함수)")
+    note("train.bat 준비: 판정을 남김", code == 0 and "labeled" in out, f"종료 코드 {code}")
+    model_before = active_model()
+    code, out = run(["cmd", "/c", "train.bat"], env, 1800, "train.bat (더블클릭: 입력이 닫혀 있으면 바꾸지 않음)")
+    note("train.bat 더블클릭: 학습·평가가 끝나고 운영 모델은 그대로",
+         code == 0 and all(step in out for step in ("[1/4]", "[2/4]", "[3/4]", "[4/4]")) and "운영 모델은 그대로" in out
+         and active_model() == model_before, f"종료 코드 {code}, 모델 {model_before} -> {active_model()}")
+    code, out = run(["cmd", "/c", "train.bat", "--promote", "yes"], env, 1800, "train.bat --promote yes")
+    note("train.bat --promote yes: 새 모델로 바꿈 (한글 표와 안내가 찍힘)",
+         code == 0 and "운영 모델로 바꿨습니다" in out and "새 모델" in out and active_model() not in (None, model_before),
+         f"종료 코드 {code}, 모델 {model_before} -> {active_model()}")
+    code, out = run(drop("mark.bat", [FIXTURES / "sample_report.pptx"]), env, 1800, "mark.bat (바꾼 뒤 다시 분석)")
+    note("train.bat 뒤의 분석: 새 모델을 씀", code == 0 and latest_run_model() == active_model(),
+         f"run 모델 {latest_run_model()}, 운영 모델 {active_model()}")
 
     failed = [name for name, ok, _ in RESULTS if not ok]
     print(f"\n점검 {len(RESULTS)}개 · 통과 {len(RESULTS) - len(failed)}개 · 실패 {len(failed)}개", flush=True)
