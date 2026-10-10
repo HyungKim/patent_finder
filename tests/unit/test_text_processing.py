@@ -206,3 +206,41 @@ def test_composed_input_trims_context_before_target(tokenizer):
     assert tokenizer.count(composed) <= 40 - tokenizer.overhead - 2
     with pytest.raises(ValueError):
         compose_input("대상 " * 80, None, None, None, tokenizer, config)
+
+
+# ---------------------------------------------------------------- 판정 단위를 잘게 (segmentation.unit=fine)
+def test_fine_unit_keeps_every_bullet_and_sentence_separate(tokenizer):
+    fine = SegmentationConfig(unit="fine")
+    blocks = [
+        Block(kind="list_item", text="제안: 2단계 보정", locator={}, unit=1, container="box", level=0, section_key="s"),
+        Block(kind="list_item", text="코일 온도는 전류의 제곱 누적값으로 추정한다", locator={}, unit=1, container="box",
+              level=1, section_key="s"),
+        Block(kind="list_item", text="추정 온도 구간별 오프셋을 차감한다", locator={}, unit=1, container="box", level=1,
+              section_key="s"),
+    ]
+    assert len(build_paragraphs(blocks, tokenizer, SegmentationConfig())) == 1  # 기본: 상위 + 하위 한 묶음
+    paragraphs = build_paragraphs(blocks, tokenizer, fine)
+    assert [paragraph.kind for paragraph in paragraphs] == ["list_item"] * 3
+
+    block = Block(kind="paragraph", text="첫 문장은 배경이다. 둘째 문장은 임계값을 넘으면 출력을 낮춘다. 셋째 문장", locator={},
+                  section_key="s")
+    assert len(segment_paragraph(build_paragraphs([block], tokenizer, SegmentationConfig())[0], tokenizer,
+                                 SegmentationConfig())) == 1
+    drafts = segment_paragraph(build_paragraphs([block], tokenizer, fine)[0], tokenizer, fine)
+    assert [draft.text for draft in drafts] == ["첫 문장은 배경이다.", "둘째 문장은 임계값을 넘으면 출력을 낮춘다.", "셋째 문장"]
+    assert [block.text[a:b] for draft in drafts for a, b in draft.spans] == [draft.text for draft in drafts]
+
+
+def test_fine_unit_judges_table_cells_separately(tokenizer):
+    fine = SegmentationConfig(unit="fine")
+    middle = "블록별 분산으로 필터 강도를 선택. 강도는 3단계다"
+    text = f"전처리 | {middle} | 신규"
+    cells = [{"col": 0, "start": 0, "end": 3, "header": "모듈"},
+             {"col": 1, "start": 6, "end": 6 + len(middle), "header": "처리 방식"},
+             {"col": 2, "start": 9 + len(middle), "end": 11 + len(middle), "header": "비고"}]
+    block = Block(kind="table_row", text=text, locator={}, cells=cells, section_key="s")
+    drafts = segment_paragraph(build_paragraphs([block], tokenizer, fine)[0], tokenizer, fine)
+    assert [draft.text for draft in drafts] == [
+        "모듈: 전처리", "처리 방식: 블록별 분산으로 필터 강도를 선택.", "처리 방식: 강도는 3단계다", "비고: 신규"]
+    assert [text[a:b] for draft in drafts for a, b in draft.spans] == ["전처리", "블록별 분산으로 필터 강도를 선택.", "강도는 3단계다", "신규"]
+    assert all("cell" in draft.flags for draft in drafts)

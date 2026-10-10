@@ -70,6 +70,13 @@
   setup.bat 의 검은 창에 나온 [실패] 줄과 그 아래 안내를 그대로 적어 두세요.
   자세한 설명은 docs\OFFLINE_INSTALL.md 에 있습니다.
 
+■ 판정 단위를 잘게 하고 싶을 때 (세분 모드)
+
+  기본은 불릿 묶음·문단·표 행 단위로 판정하고 표시합니다. 불릿마다, 문장마다, 표는 셀마다 따로 하려면
+  폴더를 통째로 복사해 D:\patent_finder_fine 으로 두고, 그 안의 config\default.yaml 에서
+  unit: paragraph 를 unit: fine 으로 바꾼 뒤 그 폴더의 mark.bat 을 씁니다. (docs\OFFLINE_INSTALL.md 3.6)
+  판정 기록은 폴더마다 따로 쌓입니다.
+
 ■ 알아둘 점
 
   표시는 "검토해 볼 후보" 입니다. 처음에는 합성 예문으로 만든 임시 분류기가 판정하므로

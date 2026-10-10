@@ -15,6 +15,7 @@ import numpy as np
 from .classifiers.bundle import ModelBundle, save_bundle
 from .classifiers.registry import next_model_version, register_model
 from .classifiers.seed import seed_features
+from .versions import segmentation_version
 from .classifiers.train import TrainingBlocked, fit_logistic, out_of_fold_scores
 from .embeddings.features import feature_config, feature_config_hash
 from .evaluation.reports import paragraph_units
@@ -111,6 +112,7 @@ def train_from_snapshot(services: Services, snapshot_path: Path) -> dict[str, An
     model_version = next_model_version(database)
     training_run_id = f"train-{model_version.split('-')[1]}"
     bundle = ModelBundle(
+        segmentation_version=segmentation_version(config.segmentation.unit),
         model_version=model_version, kind="trained", coef=fit.coef.tolist(), intercept=fit.intercept,
         feature_config=features_cfg, feature_config_hash=feature_config_hash(features_cfg),
         encoder_revision=store.encoder.encoder_revision, encoder_config_hash=store.encoder.config_hash,

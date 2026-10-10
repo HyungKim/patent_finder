@@ -280,3 +280,26 @@ def test_model_manifest_hash_mismatch_is_rejected(tmp_path):
     (model_dir / "model.onnx").write_bytes(b"tampered")
     with pytest.raises(ModelError, match="해시 불일치"):
         load_model_info(model_dir)
+
+
+def test_segmentation_unit_is_validated_and_changes_bundle_compatibility(tmp_path):
+    from patent_marker.classifiers.bundle import ModelBundle, compatibility_problems
+    from patent_marker.versions import segmentation_version
+
+    config = AppConfig()
+    config.segmentation.unit = "fine"
+    assert validate(config).segmentation.unit == "fine"
+    config.segmentation.unit = "sentence"
+    with pytest.raises(ConfigError, match="segmentation.unit"):
+        validate(config)
+    path = tmp_path / "config.yaml"
+    path.write_text("segmentation:\n  unit: fine\n", encoding="utf-8")
+    assert load_config(path).segmentation.unit == "fine"
+
+    assert segmentation_version("paragraph") == "segmentation-1" and segmentation_version("fine") == "segmentation-2-fine"
+    bundle = ModelBundle(model_version="classifier-0001", kind="trained", coef=[0.5], intercept=0.1,
+                         feature_config={"encoder_config_hash": "enc-hash"}, feature_config_hash="f",
+                         encoder_revision="r", encoder_config_hash="enc-hash", tokenizer_hash="t", created_at="now",
+                         segmentation_version=segmentation_version("fine"))
+    assert compatibility_problems(bundle, "enc-hash", segmentation_version("fine")) == []
+    assert any("분할 버전" in problem for problem in compatibility_problems(bundle, "enc-hash"))

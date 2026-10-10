@@ -115,12 +115,14 @@ def cmd_doctor(args: argparse.Namespace, config: AppConfig) -> int:
                 f"schema {database.applied_versions()} · 미적용 migration {pending} · 무결성 {integrity['integrity_ok']}")
             if not pending and encoder is not None:
                 from .classifiers.bundle import compatibility_problems
+                from .versions import segmentation_version
                 from .classifiers.registry import get_active, load_registered_bundle
 
                 active = get_active(database)
                 if active:
                     bundle = load_registered_bundle(database, active["model_version"], config.base_dir)
-                    problems = compatibility_problems(bundle, encoder.config_hash)
+                    problems = compatibility_problems(bundle, encoder.config_hash,
+                                                      segmentation_version(config.segmentation.unit))
                     add("운영 모델", "fail" if problems else "ok",
                         f"{active['model_version']} ({active.get('stage')})" + (": " + " / ".join(problems) if problems else ""))
                 else:

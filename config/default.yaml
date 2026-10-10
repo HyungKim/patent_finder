@@ -31,6 +31,7 @@ segmentation:
   overlap_tokens: 48
   title_tokens: 32
   short_item_tokens: 64      # 계층 불릿 묶음에 넣을 수 있는 항목 최대 길이
+  unit: paragraph            # paragraph: 불릿 묶음·문단·표 행 단위. fine: 불릿마다·문장마다·표는 셀마다 (docs/OFFLINE_INSTALL.md 3.6)
 embedding:
   prefix: "query: "
   normalize: true

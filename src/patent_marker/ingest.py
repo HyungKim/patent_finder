@@ -18,7 +18,7 @@ from .segmentation.normalization import normalize_text
 from .segmentation.paragraphs import build_paragraphs
 from .segmentation.segmenter import SegmentationError, segment_paragraph
 from .services import Services
-from .versions import PARSER_VERSION, PREPROCESS_VERSION, SEGMENTATION_VERSION
+from .versions import PARSER_VERSION, PREPROCESS_VERSION, segmentation_version
 
 _FAMILY_MIN_SHARED = 3
 _FAMILY_MIN_CONTAINMENT = 0.5
@@ -55,7 +55,8 @@ def discover_files(input_path: Path) -> list[Path]:
 
 def pipeline_hash(services: Services) -> str:
     return sha256_text(canonical_json({
-        "parser": PARSER_VERSION, "preprocess": PREPROCESS_VERSION, "segmentation": SEGMENTATION_VERSION,
+        "parser": PARSER_VERSION, "preprocess": PREPROCESS_VERSION,
+        "segmentation": segmentation_version(services.config.segmentation.unit),
         "options": services.config.parse_options_hash(),
         "tokenizer": getattr(services.tokenizer, "identity", type(services.tokenizer).__name__),
     }))[:32]
@@ -126,6 +127,7 @@ def ingest_file(services: Services, path: Path, encoding: str | None = None) -> 
         return IngestResult(path, None, "failed", error="처리 중에 원본 파일이 바뀌었습니다. 다시 실행하세요.")
 
     document_id = "doc-" + sha256_text(content_sha256 + pipe)[:16]
+    seg_version = segmentation_version(config.segmentation.unit)
     paragraph_rows: list[tuple[Any, ...]] = []
     segment_rows: list[dict[str, Any]] = []
     section_keys: list[str | None] = []
@@ -189,7 +191,7 @@ def ingest_file(services: Services, path: Path, encoding: str | None = None) -> 
             "segmentation_version, pipeline_hash, coverage_json, warnings_json, error, is_current) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
             (document_id, content_sha256, str(path.resolve()), path.name, result.format, path.stat().st_size,
-             family, utc_now(), result.status, PARSER_VERSION, PREPROCESS_VERSION, SEGMENTATION_VERSION, pipe,
+             family, utc_now(), result.status, PARSER_VERSION, PREPROCESS_VERSION, seg_version, pipe,
              json.dumps(result.coverage, ensure_ascii=False), json.dumps(result.warnings, ensure_ascii=False),
              result.error),
         )
@@ -208,7 +210,7 @@ def ingest_file(services: Services, path: Path, encoding: str | None = None) -> 
                  json.dumps(row["spans"]), row["text"], sha256_text(row["text"]),
                  json.dumps(context_summary(refs[seq], ids)),
                  input_hash(row["text"], text_at(refs[seq].title), text_at(refs[seq].prev), text_at(refs[seq].next)),
-                 row["token_count"], PREPROCESS_VERSION, SEGMENTATION_VERSION, json.dumps(row["flags"]))
+                 row["token_count"], PREPROCESS_VERSION, seg_version, json.dumps(row["flags"]))
                 for seq, row in enumerate(segment_rows)
             ],
         )

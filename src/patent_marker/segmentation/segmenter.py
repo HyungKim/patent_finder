@@ -2,6 +2,7 @@
 
 - 문장 경계로 먼저 나누고, 한 문장이 너무 길면 tokenizer offset으로 나누며 overlap을 둔다.
 - 모든 segment는 원문 구간을 가진다. 상한을 넘는 입력을 조용히 자르지 않고 예외를 낸다.
+- segmentation.unit=fine 이면 길이와 상관없이 문장마다, 표는 셀마다 따로 segment로 만든다.
 """
 from __future__ import annotations
 
@@ -75,6 +76,7 @@ def _segment_text(original: str, base: int, hard_breaks: set[int], counter: Toke
                 break
             cursor += step
 
+    fine = config.unit == "fine"
     current: tuple[int, int] | None = None
     for start, end in split_sentences(norm, forced):
         if counter.count(norm[start:end]) > budget:
@@ -82,6 +84,8 @@ def _segment_text(original: str, base: int, hard_breaks: set[int], counter: Toke
                 emit(*current)
                 current = None
             windows(start, end)
+        elif fine:  # 문장마다 따로. 문장부호나 줄바꿈이 없는 개조식 글은 한 덩어리로 남는다
+            emit(start, end)
         elif current is None:
             current = (start, end)
         elif counter.count(norm[current[0]:end]) <= budget:
@@ -111,6 +115,15 @@ def _segment_row(paragraph: LogicalParagraph, counter: TokenCounter, config: Seg
         })
     if not pieces:
         return []
+    if config.unit == "fine":  # 셀마다 따로 ('열 제목: 셀 내용'). 셀 안의 문장도 따로 나뉜다
+        drafts = []
+        for piece in pieces:
+            cell = piece["cell"]
+            drafts.extend(_segment_text(
+                paragraph.original_text[cell["start"]:cell["end"]], cell["start"], paragraph.hard_breaks,
+                counter, config, prefix=piece["label"], extra_flags=("cell",),
+            ))
+        return drafts
     full = " | ".join(piece["text"] for piece in pieces)
     total = counter.count(full)
     if total <= config.target_tokens:

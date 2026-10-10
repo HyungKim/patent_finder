@@ -17,7 +17,7 @@ from ..policies.thresholds import SEED_UNVALIDATED, create_policy, select_thresh
 from ..runtime import sha256_text, utc_now
 from ..segmentation.normalization import normalize_text
 from ..services import Services
-from ..versions import SEED_DATA_VERSION
+from ..versions import SEED_DATA_VERSION, segmentation_version
 from .bundle import ModelBundle, compatibility_problems, save_bundle
 from .registry import (SEED_MODEL_VERSION, STAGE_SEED, get_active, get_model, load_registered_bundle,
                        next_model_version, register_model, set_active)
@@ -51,7 +51,7 @@ def _compatible_seed(services: Services) -> dict[str, Any] | None:
     for row in services.database.query(
             "SELECT model_version FROM model_registry WHERE kind = 'seed' ORDER BY created_at DESC, model_version DESC"):
         bundle = load_registered_bundle(services.database, row["model_version"], services.config.base_dir)
-        if not compatibility_problems(bundle, encoder_hash):
+        if not compatibility_problems(bundle, encoder_hash, segmentation_version(services.config.segmentation.unit)):
             return get_model(services.database, row["model_version"])
     return None
 
@@ -82,6 +82,7 @@ def ensure_seed_model(services: Services) -> dict[str, Any] | None:
         version = SEED_MODEL_VERSION if get_model(database, SEED_MODEL_VERSION) is None else next_model_version(database)
         features_cfg = feature_config(mode, store.encoder.config_hash, config.segmentation)
         bundle = ModelBundle(
+            segmentation_version=segmentation_version(config.segmentation.unit),
             model_version=version, kind="seed", coef=fit.coef.tolist(), intercept=fit.intercept,
             feature_config=features_cfg, feature_config_hash=feature_config_hash(features_cfg),
             encoder_revision=store.encoder.encoder_revision, encoder_config_hash=store.encoder.config_hash,
@@ -100,7 +101,9 @@ def ensure_seed_model(services: Services) -> dict[str, Any] | None:
         current = get_model(database, active["model_version"])
         if current and current["kind"] == "seed":
             bundle = load_registered_bundle(database, active["model_version"], config.base_dir)
-            replace_stale_seed = bool(compatibility_problems(bundle, services.require_encoder().encoder.config_hash))
+            replace_stale_seed = bool(compatibility_problems(
+                bundle, services.require_encoder().encoder.config_hash,
+                segmentation_version(services.config.segmentation.unit)))
     if active is None or replace_stale_seed:
         reason = ("운영 모델이 없어 합성 seed 분류기를 임시로 사용" if active is None
                   else "인코더·전처리가 바뀌어 seed 분류기를 다시 만듦")

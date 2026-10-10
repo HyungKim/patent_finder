@@ -54,6 +54,9 @@ class LimitsConfig:
     max_uncompressed_mb: int = 1024
 
 
+SEGMENTATION_UNITS = ("paragraph", "fine")
+
+
 @dataclass
 class SegmentationConfig:
     max_input_tokens: int = 512
@@ -62,6 +65,8 @@ class SegmentationConfig:
     overlap_tokens: int = 48
     title_tokens: int = 32
     short_item_tokens: int = 64
+    # paragraph: 불릿 묶음·문단·표 행 단위 (기본). fine: 불릿마다, 문장마다, 표는 셀마다 따로 판정
+    unit: str = "paragraph"
 
 
 @dataclass
@@ -253,6 +258,8 @@ def validate(config: AppConfig) -> AppConfig:
             raise ConfigError(f"paths.{name}에 원격 주소를 쓸 수 없습니다: {value}")
 
     seg = config.segmentation
+    if seg.unit not in SEGMENTATION_UNITS:
+        raise ConfigError(f"segmentation.unit은 {', '.join(SEGMENTATION_UNITS)} 중 하나여야 합니다: {seg.unit!r}")
     if not (0 < seg.target_tokens < seg.max_input_tokens):
         raise ConfigError("segmentation.target_tokens는 max_input_tokens보다 작아야 합니다.")
     if not (0 <= seg.overlap_tokens < seg.target_tokens):

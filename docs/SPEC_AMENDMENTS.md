@@ -65,4 +65,5 @@
 | 4.2, 5.2 | PDF 목록의 묶음 단위와 들여쓰기 수준은 같은 단(column) 전체를 기준으로 정한다. 항목 사이 간격이 넓어도 상위·하위 불릿을 묶을 수 있다 (`parser-3`) |
 | 2 | `runtime.offline: true` 이면 프로세스 안에 네트워크 가드를 설치해 루프백 외 접속·DNS 조회를 차단한다 |
 | 14.2 | `policy.candidate_threshold` 에 숫자를 넣으면 설정 오류다. threshold는 정책 버전으로만 관리한다 |
+| 5.2 | 판정 단위 설정 `segmentation.unit` 추가. 기본 `paragraph` 는 스펙대로 불릿 묶음·문단·표 행이고, `fine` 은 불릿마다·문장마다·셀마다 따로 나눈다(분할 버전 `segmentation-2-fine`). 단위가 다르면 문서가 다시 나뉘고 분류기가 호환되지 않는다. PPTX 사본에서 run의 일부만 표시 대상일 때는 run을 나눠 그 부분만 칠한다 |
 | 8.1, 8.2 | 분석 흐름과 떨어진 실험 명령 `laya-compare` 추가. 저장된 run의 1차 후보 전부를 Laya로 다시 판단해 `second_stage_results` 에 덧붙이고 비교 자료를 따로 만든다. `laya.mode` 는 여전히 `off` 만 허용하고 분석·내보내기·검토 화면은 2단계 결과를 읽지 않는다. Laya와 PyTorch는 기본 설치에 넣지 않고 별도 환경에서만 쓴다. 질문은 8.1의 네 항목 중 "구체적인 구성·처리·제어 방법이 있는가" 하나만 쓴다. 합성 자료에서 잰 결과와 한계는 `docs/LAYA_EXPERIMENT.md` |

@@ -12,6 +12,7 @@ from .config import SegmentationConfig
 from .embeddings.features import FeatureInput, build_features
 from .policies.thresholds import get_policy
 from .services import Services
+from .versions import segmentation_version
 
 
 class IncompatibleBundle(RuntimeError):
@@ -68,7 +69,8 @@ def score_segments(services: Services, bundle: ModelBundle,
 
 
 def ensure_compatible(services: Services, bundle: ModelBundle) -> None:
-    problems = compatibility_problems(bundle, services.require_encoder().encoder.config_hash)
+    problems = compatibility_problems(bundle, services.require_encoder().encoder.config_hash,
+                                      segmentation_version(services.config.segmentation.unit))
     if problems:
         raise IncompatibleBundle(
             f"{bundle.model_version}은(는) 현재 환경과 호환되지 않습니다: " + " / ".join(problems)

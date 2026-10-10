@@ -93,15 +93,52 @@ def _highlight_run(run: Any) -> None:
     properties.insert(position, highlight)
 
 
+def _split_run(p: Any, element: Any, run: dict[str, int], covered: list[tuple[int, int]]) -> int:
+    """run의 일부만 표시 대상일 때 run을 조각으로 나누고 해당 조각만 칠한다. 서식(a:rPr)은 조각마다 복사한다."""
+    import copy
+
+    from ..parsers.pptx import A
+
+    text = element.find(A + "t").text or ""
+    cuts = sorted({run["start"], run["end"], *(a for a, _ in covered), *(b for _, b in covered)})
+    pieces = []
+    for a, b in zip(cuts, cuts[1:]):
+        if b > a:
+            pieces.append((text[a - run["start"]:b - run["start"]], any(ca <= a and b <= cb for ca, cb in covered)))
+    position = list(p).index(element)
+    p.remove(element)
+    count = 0
+    for offset, (piece, marked) in enumerate(pieces):
+        clone = copy.deepcopy(element)
+        clone.find(A + "t").text = piece
+        if marked:
+            _highlight_run(clone)
+            count += 1
+        p.insert(position + offset, clone)
+    return count
+
+
 def _highlight_paragraph(p: Any, runs: list[dict[str, int]], spans: list[tuple[int, int]]) -> int:
+    from ..parsers.pptx import A
+
     children = list(p)
     count = 0
-    for run in runs:
-        if any(run["start"] < b and a < run["end"] for a, b in spans) and run["run"] < len(children):
-            element = children[run["run"]]
-            if element.tag.endswith("}r") or element.tag.endswith("}fld"):
-                _highlight_run(element)
-                count += 1
+    # 뒤 run부터 처리한다: 앞 run을 조각으로 나눠도 아직 처리하지 않은 run의 번호가 밀리지 않는다
+    for run in sorted(runs, key=lambda item: item["run"], reverse=True):
+        if run["run"] >= len(children):
+            continue
+        element = children[run["run"]]
+        if not (element.tag.endswith("}r") or element.tag.endswith("}fld")):
+            continue
+        covered = [(max(a, run["start"]), min(b, run["end"])) for a, b in spans if run["start"] < b and a < run["end"]]
+        if not covered:
+            continue
+        whole = len(covered) == 1 and covered[0] == (run["start"], run["end"])
+        if whole or element.tag.endswith("}fld") or element.find(A + "t") is None:
+            _highlight_run(element)
+            count += 1
+        else:
+            count += _split_run(p, element, run, covered)
     return count
 
 

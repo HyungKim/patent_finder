@@ -66,15 +66,19 @@ def load_bundle(path: Path, expected_sha256: str | None = None) -> ModelBundle:
         raise BundleError(f"분류기 파일 형식 오류: {path} ({exc})") from exc
 
 
-def compatibility_problems(bundle: ModelBundle, encoder_config_hash: str) -> list[str]:
-    """현재 런타임에서 이 bundle을 쓸 수 없는 이유 목록. 비어 있으면 호환."""
+def compatibility_problems(bundle: ModelBundle, encoder_config_hash: str,
+                           segmentation_version: str = SEGMENTATION_VERSION) -> list[str]:
+    """현재 런타임에서 이 bundle을 쓸 수 없는 이유 목록. 비어 있으면 호환.
+
+    segmentation_version: 현재 설정의 판정 단위에 해당하는 분할 버전 (versions.segmentation_version).
+    """
     problems = []
     if bundle.encoder_config_hash != encoder_config_hash:
         problems.append("인코더(모델 파일·tokenizer·접두사·정규화)가 학습 때와 다릅니다.")
     if bundle.preprocess_version != PREPROCESS_VERSION:
         problems.append(f"전처리 버전 불일치: bundle {bundle.preprocess_version}, 현재 {PREPROCESS_VERSION}")
-    if bundle.segmentation_version != SEGMENTATION_VERSION:
-        problems.append(f"분할 버전 불일치: bundle {bundle.segmentation_version}, 현재 {SEGMENTATION_VERSION}")
+    if bundle.segmentation_version != segmentation_version:
+        problems.append(f"분할 버전 불일치: bundle {bundle.segmentation_version}, 현재 {segmentation_version}")
     if bundle.feature_config.get("encoder_config_hash") != bundle.encoder_config_hash:
         problems.append("bundle 내부의 특징 설정과 인코더 정보가 서로 다릅니다.")
     return problems

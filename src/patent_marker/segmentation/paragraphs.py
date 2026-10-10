@@ -4,6 +4,7 @@
   1) 상위 항목과 바로 뒤따르는 하위 수준 항목 (같은 텍스트 상자/목록)
   2) 콜론으로 끝나는 도입 문장과 바로 뒤따르는 목록 항목
 같은 수준의 이웃 불릿은 묶지 않고 문맥으로만 참조한다.
+segmentation.unit=fine 이면 아무것도 묶지 않는다 (불릿마다 따로).
 """
 from __future__ import annotations
 
@@ -108,7 +109,7 @@ def build_paragraphs(blocks: list[Block], counter: TokenCounter, config: Segment
     while index < len(blocks):
         block = blocks[index]
         group = [block]
-        if block.kind in ("list_item", "paragraph") and not block.cells:
+        if block.kind in ("list_item", "paragraph") and not block.cells and config.unit != "fine":
             total = counter.count(normalize_text(block.text))
             if total <= config.short_item_tokens:
                 for cursor in _children(blocks, index):
