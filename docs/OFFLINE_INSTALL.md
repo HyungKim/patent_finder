@@ -2,7 +2,7 @@
 
 운영 PC는 인터넷에서 패키지나 모델을 받지 않는다. 필요한 파일은 인터넷이 허용된 **준비 환경**에서 확보한 뒤 회사 반입 절차로 옮긴다. 운영 코드에는 다운로드 경로가 없다.
 
-> 현재 상태(2026-10-10): `setup.bat` · `mark.bat` · `run.bat` · `train.bat` 과 3.3의 직접 명령 절차를 GitHub의 Windows 러너(영문 Windows Server)에서 Python 3.11, 3.12, 3.13 각각으로 확인했다(`.github/workflows/windows.yml`). 묶음의 wheel만으로 설치되고, 점검과 합성 자료 분석이 되며, 시험 168개가 세 버전에서 통과했다. 릴리스 v0.1.4의 zip으로는 내려받아 설치, 폴더 이동, 묶음 전체로 바꾸기, v0.1.3을 설치한 위에 code-only zip을 덮어쓴 뒤 `train.bat` 까지 확인했다. 대상 회사 PC(한국어 Windows 10/11)에서는 아직 확인하지 않았다.
+> 현재 상태(2026-10-10): `setup.bat` · `mark.bat` · `run.bat` · `train.bat` 과 3.3의 직접 명령 절차를 GitHub의 Windows 러너(영문 Windows Server)에서 Python 3.11, 3.12, 3.13 각각으로 확인했다(`.github/workflows/windows.yml`). 묶음의 wheel만으로 설치되고, 점검과 합성 자료 분석이 되며, 시험 175개가 세 버전에서 통과했다. 릴리스 v0.1.5의 zip으로는 내려받아 설치, 폴더 이동, 묶음 전체로 바꾸기, v0.1.4를 설치한 위에 code-only zip을 덮어쓴 뒤 `train.bat` 까지 확인했다. 대상 회사 PC(한국어 Windows 10/11)에서는 아직 확인하지 않았다.
 
 ## 1. 반입 목록
 
