@@ -217,9 +217,17 @@ class AppConfig:
         return sha256_text(canonical_json(data))
 
     def parse_options_hash(self) -> str:
+        """문서를 다시 수집해야 하는지 정하는 파싱·분할 설정의 해시.
+
+        판정 단위(unit)는 여기에 넣지 않는다. 단위는 분할 버전(versions.segmentation_version)으로 pipeline_hash에
+        들어가므로 fine이면 어차피 달라지고, 기본값에서는 설정 항목이 추가되기 전(v0.1.4까지)과 같은 해시가 나와
+        이미 판정한 문서가 다시 수집되지 않는다.
+        """
+        segmentation = dataclasses.asdict(self.segmentation)
+        segmentation.pop("unit", None)
         return sha256_text(canonical_json({
             "parsing": dataclasses.asdict(self.parsing),
-            "segmentation": dataclasses.asdict(self.segmentation),
+            "segmentation": segmentation,
         }))[:16]
 
 

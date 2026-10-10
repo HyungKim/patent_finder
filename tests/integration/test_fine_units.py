@@ -154,3 +154,21 @@ def test_changing_the_unit_reingests_documents_and_rebuilds_the_seed(tmp_path):
     active = get_active(fine.database)
     assert active["model_version"] != before  # 단위가 다르면 분류기가 호환되지 않아 seed를 다시 만든다
     assert load_registered_bundle(fine.database, active["model_version"], fine.config.base_dir).segmentation_version == "segmentation-2-fine"
+
+
+def test_documents_judged_before_the_unit_setting_existed_are_reused_in_the_default_unit(tmp_path):
+    from patent_marker.ingest import pipeline_hash
+
+    inbox = _inbox(tmp_path)
+    services = make_services(tmp_path)
+    run_analysis(services, inbox, "run-001")
+    # 설정 항목이 생기기 전(v0.1.4)과 같은 pipeline hash: 기존 문서 기록과 판정이 그대로 쓰인다
+    assert pipeline_hash(services).startswith(
+        __import__("patent_marker.runtime", fromlist=["sha256_text"]).sha256_text(
+            __import__("patent_marker.runtime", fromlist=["canonical_json"]).canonical_json({
+                "parser": "parser-3", "preprocess": "preprocess-1", "segmentation": "segmentation-1",
+                "options": "0cf59c40c8a62e2a", "tokenizer": "fake-tokenizer-v1"}))[:32])
+    again = make_services(tmp_path, **{"segmentation.unit": "paragraph"})
+    assert ingest_file(again, inbox / "sample_report.pptx").reused
+    fine = make_services(tmp_path, **{"segmentation.unit": "fine"})
+    assert not ingest_file(fine, inbox / "sample_report.pptx").reused

@@ -303,3 +303,21 @@ def test_segmentation_unit_is_validated_and_changes_bundle_compatibility(tmp_pat
                          segmentation_version=segmentation_version("fine"))
     assert compatibility_problems(bundle, "enc-hash", segmentation_version("fine")) == []
     assert any("분할 버전" in problem for problem in compatibility_problems(bundle, "enc-hash"))
+
+
+def test_parse_options_hash_is_unchanged_by_the_default_unit_setting(tmp_path):
+    """판정 단위 설정이 추가되어도 기본값에서는 v0.1.4까지의 해시와 같아야 한다.
+    달라지면 설치된 PC에서 이미 판정한 문서가 다시 수집되어 검토 화면에서 판정이 떨어져 보인다."""
+    import dataclasses
+
+    from patent_marker.runtime import canonical_json, sha256_text
+
+    config = validate(AppConfig())
+    fields_before_unit = ("max_input_tokens", "target_tokens", "context_tokens", "overlap_tokens", "title_tokens",
+                          "short_item_tokens")
+    segmentation = dataclasses.asdict(config.segmentation)
+    expected = sha256_text(canonical_json({"parsing": dataclasses.asdict(config.parsing),
+                                           "segmentation": {key: segmentation[key] for key in fields_before_unit}}))[:16]
+    assert config.parse_options_hash() == expected == "0cf59c40c8a62e2a"
+    config.segmentation.unit = "fine"
+    assert config.parse_options_hash() == expected  # 단위는 분할 버전으로 pipeline_hash에 들어간다

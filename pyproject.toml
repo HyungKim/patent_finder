@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "patent-marker"
-version = "0.1.5"
+version = "0.1.6"
 description = "오프라인 특허 검토 후보 마킹 시스템 (CPU 전용, 외부 API 없음)"
 readme = "README.md"
 requires-python = ">=3.11"
